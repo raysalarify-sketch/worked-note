@@ -1,0 +1,9 @@
+node_modules/
+client/.vite/
+client/dist/
+server/venv/
+**/__pycache__/
+**/*.pyc
+server/db.sqlite3
+.env
+_github_upload/
