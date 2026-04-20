@@ -181,7 +181,7 @@ export default function App() {
   const login = async () => {
     setSending(true);
     try {
-      const res = await api.auth.login(lf.email, lf.pw);
+      const res = await api.auth.login(lf.email.toLowerCase().trim(), lf.pw);
       setUser(res.user); setPg("app"); refresh();
     } catch (e) { flash("이메일 또는 비밀번호가 올바르지 않습니다.", "err"); }
     finally { setSending(false); }
@@ -217,7 +217,7 @@ export default function App() {
   const forgot = async () => {
     setSending(true);
     try {
-      await api.auth.forgotRequest(ff.email);
+      await api.auth.forgotRequest(ff.email.toLowerCase().trim());
       flash("이메일로 재설정 링크를 보냈습니다."); setPg("login");
     } catch (e) { flash("가입되지 않은 이메일입니다.", "err"); }
     finally { setSending(false); }
