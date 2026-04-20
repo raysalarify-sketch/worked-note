@@ -115,14 +115,17 @@ NHN_SMS_APPKEY = os.environ.get('NHN_SMS_APPKEY', '')
 NHN_SMS_SECRET = os.environ.get('NHN_SMS_SECRET', '')
 NHN_SMS_SENDER = os.environ.get('NHN_SMS_SENDER', '')
 
-NHN_EMAIL_APPKEY = os.environ.get('NHN_EMAIL_APPKEY', '')
-NHN_EMAIL_SECRET = os.environ.get('NHN_EMAIL_SECRET', '')
-NHN_EMAIL_SENDER = os.environ.get('NHN_EMAIL_SENDER', '')
-DEFAULT_FROM_EMAIL = NHN_EMAIL_SENDER
+# 이메일 설정 (Gmail SMTP 사용)
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'ray.salarify@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'amzvrzqdircslpqm') # 발급받은 앱 비밀번호 (공백 제외)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # 이메일 백엔드 설정: 개발 환경(DEBUG=True)에서는 콘솔에 출력
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
-    # 프로덕션에서는 NHN Cloud 이메일 API 사용
-    EMAIL_BACKEND = 'config.email_backends.NHNCloudEmailBackend'
+    # 프로덕션에서는 Gmail SMTP 사용
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
