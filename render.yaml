@@ -9,3 +9,12 @@ services:
         value: 3.11.0
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings
+      - fromDatabase:
+          name: worked-note-db
+          property: connectionString
+
+databases:
+  - name: worked-note-db
+    plan: free
+    databaseName: worked_note
+    user: admin
