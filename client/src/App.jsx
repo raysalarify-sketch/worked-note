@@ -24,7 +24,7 @@ const Logo = ({ size = 28 }) => (
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-body{font-family: 'Inter', 'IBM Plex Sans KR', sans-serif; background: #fff; color: #111827;}
+body{font-family: 'Inter', 'IBM Plex Sans KR', sans-serif; background: #f0f4f8; color: #111827;}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px}
 @keyframes up{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
@@ -281,11 +281,11 @@ export default function App() {
           <div style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}>
             <Logo size={80} />
           </div>
-          <h1 style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-            <div style={{ color: S.accent, marginBottom: 8 }}>({ROT_WORDS[rotIdx]})</div>
-            <div style={{ background: "linear-gradient(to right, #111827, #4b5563)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Smart Note</div>
+          <h1 style={{ fontSize: 52, fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+            <div style={{ color: S.accent, marginBottom: 12 }}>({ROT_WORDS[rotIdx]})</div>
+            <div style={{ background: "linear-gradient(to right, #4f46e5, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>WORKED Smart Note</div>
           </h1>
-          <p className="typewriter" style={{ color: S.muted, fontSize: 19, fontWeight: 600, marginTop: 24 }}>당신의 모든 일상을 담는 지능형 비서</p>
+          <p className="typewriter" style={{ color: "#7c3aed", fontSize: 20, fontWeight: 700, marginTop: 28 }}>생각을 기록하고, AI가 분석하는 스마트 일상</p>
         </div>
         
         <div className="card" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 32, padding: 32 }}>
