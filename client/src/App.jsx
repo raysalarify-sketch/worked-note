@@ -160,8 +160,11 @@ export default function App() {
       <div style={{ width: "100%", maxWidth: 420, animation: "up .8s ease" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <Logo size={70} />
-          <h1 style={{ fontSize: 42, fontWeight: 900, background: "linear-gradient(to right, #4f46e5, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginTop: 12 }}>Worked Note</h1>
-          <p className="typewriter" style={{ color: S.ink, fontSize: 18, fontWeight: 700, marginTop: 8 }}>사용자의 하루를 기억하는 AI</p>
+          <h1 style={{ fontSize: 45, fontWeight: 900, marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <span style={{ color: S.accent }}>({ROT_WORDS[rotIdx]})</span>
+            <span style={{ background: "linear-gradient(to right, #111827, #4b5563)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Note</span>
+          </h1>
+          <p className="typewriter" style={{ color: S.muted, fontSize: 18, fontWeight: 600, marginTop: 12 }}>당신의 모든 일상을 담는 스마트 비서</p>
         </div>
         
         <div className="card" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 32, padding: 32 }}>
