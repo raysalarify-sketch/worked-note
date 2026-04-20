@@ -139,6 +139,8 @@ export default function App() {
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const [presentMode, setPresentMode] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetForm, setResetForm] = useState({ uid: "", token: "", newPw: "" });
   const tRef = useRef(null);
   const saveRef = useRef(null);
 

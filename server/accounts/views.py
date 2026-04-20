@@ -116,7 +116,11 @@ class PasswordResetRequestView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
             # 실제 서비스라면 프론트엔드 링크를 보냄
-            reset_link = f"http://localhost:5173/reset-password/{uid}/{token}/"
+            domain = request.build_absolute_uri('/')[:-1]
+            if "localhost" not in domain and "127.0.0.1" not in domain:
+                domain = "https://worked-note.onrender.com" # 고정 도메인 사용 (Render)
+            
+            reset_link = f"{domain}/reset-password/{uid}/{token}/"
             
             send_mail(
                 '워크드 노트 비밀번호 초기화',
