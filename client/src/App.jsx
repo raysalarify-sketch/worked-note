@@ -378,10 +378,21 @@ export default function App() {
               
               {!isMob && (
                 <div style={{ flex: 1, display: "flex", gap: 20 }}>
-                  <div className="card" style={{ flex: 2, display: "flex", flexDirection: "column", padding: 32 }}>
+                  <div className="card" style={{ flex: 2, display: "flex", flexDirection: "column", padding: 32, position: "relative" }}>
                     {sel ? (
                       <>
-                        <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목을 입력하세요" style={{ fontSize: 24, fontWeight: 800, border: "none", marginBottom: 24, padding: 0 }} />
+                        <div style={{ position: "absolute", top: 24, right: 32, display: "flex", gap: 10 }}>
+                          <button onClick={() => { 
+                            if (navigator.share) navigator.share({ title: et, text: ec });
+                            else { navigator.clipboard.writeText(`${et}\n\n${ec}`); flash("클립보드에 복사되었습니다!"); }
+                          }} style={{ background: "none", border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                            <span>🔗</span> 공유
+                          </button>
+                          <button onClick={() => { if (Notification.permission === "granted") flash("이 메모에 대한 알람이 활성화되었습니다."); else Notification.requestPermission(); }} style={{ background: "none", border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                            <span>🔔</span> 알람
+                          </button>
+                        </div>
+                        <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목을 입력하세요" style={{ fontSize: 24, fontWeight: 800, border: "none", marginBottom: 24, padding: 0, width: "calc(100% - 140px)" }} />
                         <textarea value={ec} onChange={e => setEc(e.target.value)} placeholder="메모 내용을 입력하세요. 자동으로 분석됩니다." style={{ flex: 1, border: "none", resize: "none", fontSize: 16, lineHeight: 1.8, padding: 0 }} />
                         <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end", gap: 12 }}>
                           <B onClick={() => setSel(null)}>닫기</B>
@@ -389,40 +400,67 @@ export default function App() {
                         </div>
                       </>
                     ) : (
-                      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: S.muted }}>비서에게 맡길 메모를 선택하세요.</div>
+                      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: S.muted, flexDirection: "column" }}>
+                        <Logo size={40} style={{ opacity: 0.2, marginBottom: 16 }} />
+                        <span>비서에게 맡길 메모를 선택하세요.</span>
+                      </div>
                     )}
                   </div>
                   
+                  {/* AI Side Panel */}
                   <div style={{ flex: 1, minWidth: 260 }}>
-                    <div className="card" style={{ height: "100%", background: S.paper }}>
-                      <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 20, color: S.accent }}>✨ AI 분석 결과</h3>
+                    <div className="card" style={{ height: "100%", background: S.paper, border: `2px solid ${S.accent}10` }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 900, marginBottom: 24, color: S.accent, display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 20 }}>✨</span> AI 인텔리전스
+                      </h3>
                       {sel?.id !== "new" && sel ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                           <div>
-                            <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 8 }}>감지된 카테고리</p>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                              {sel.categories?.map(c => <span key={c} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 8, background: CATEGORY_MAP[c]?.color, color: "#fff", fontWeight: 700 }}>{CATEGORY_MAP[c]?.label}</span>)}
+                            <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>분류 결과</p>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                              {sel.categories?.map(c => <span key={c} style={{ fontSize: 12, padding: "6px 12px", borderRadius: 10, background: CATEGORY_MAP[c]?.color, color: "#fff", fontWeight: 800 }}>{CATEGORY_MAP[c]?.label}</span>)}
                             </div>
                           </div>
+                          
                           {sel.routines?.length > 0 && (
                             <div>
-                              <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 8 }}>추출된 루틴</p>
-                              {sel.routines.map((r, i) => <div key={i} style={{ fontSize: 13, padding: "8px", background: S.cream, borderRadius: 8, marginBottom: 4 }}>🕒 {r.time} - {r.task}</div>)}
-                            </div>
-                          )}
-                          {sel.extracted_infos?.length > 0 && (
-                            <div>
-                              <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 8 }}>추출된 정형 데이터</p>
-                              {sel.extracted_infos.map((info, i) => (
-                                <div key={i} style={{ fontSize: 13, padding: "8px", background: S.cream, borderRadius: 8, marginBottom: 4 }}>
-                                  <b>[{CATEGORY_MAP[info.info_type]?.label || info.info_type}]</b> {Object.entries(info.data).map(([k, v]) => `${v}`).join(" | ")}
+                              <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>일일 루틴 감지</p>
+                              {sel.routines.map((r, i) => (
+                                <div key={i} style={{ fontSize: 13, padding: "12px", background: "rgba(79,70,229,0.05)", borderRadius: 12, marginBottom: 6, display: "flex", alignItems: "center", gap: 10, border: `1px solid ${S.accent}10` }}>
+                                  <span style={{ fontSize: 16 }}>⏰</span>
+                                  <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <span style={{ fontWeight: 800, color: S.accent }}>{r.time}</span>
+                                    <span style={{ fontSize: 12, color: S.ink }}>{r.task}</span>
+                                  </div>
                                 </div>
                               ))}
                             </div>
                           )}
+
+                          {sel.extracted_infos?.length > 0 && (
+                            <div>
+                              <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>추출된 라이프 데이터</p>
+                              {sel.extracted_infos.map((info, i) => (
+                                <div key={i} style={{ fontSize: 13, padding: "12px", background: "#f8fafc", borderRadius: 12, marginBottom: 6, border: `1px solid ${S.line}` }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                    <span>{CATEGORY_MAP[info.info_type]?.icon}</span>
+                                    <span style={{ fontWeight: 800, fontSize: 11 }}>{CATEGORY_MAP[info.info_type]?.label}</span>
+                                  </div>
+                                  <div style={{ color: S.ink, fontWeight: 600 }}>{Object.entries(info.data).map(([k, v]) => v).join(" | ")}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {(!sel.routines?.length && !sel.extracted_infos?.length) && (
+                            <p style={{ fontSize: 13, color: S.muted, textAlign: "center", marginTop: 40, lineHeight: 1.6 }}>메모를 저장하시면 AI가<br/>중요 정보를 자동으로 추출합니다.</p>
+                          )}
                         </div>
                       ) : (
-                        <p style={{ fontSize: 12, color: S.muted }}>메모를 선택하면 분석 결과가 여기에 표시됩니다.</p>
+                        <div style={{ textAlign: "center", marginTop: 60 }}>
+                          <span style={{ fontSize: 40, opacity: 0.2 }}>🤖</span>
+                          <p style={{ fontSize: 13, color: S.muted, marginTop: 16, lineHeight: 1.6 }}>분석된 정보를 보려면<br/>메모를 선택해 주세요.</p>
+                        </div>
                       )}
                     </div>
                   </div>

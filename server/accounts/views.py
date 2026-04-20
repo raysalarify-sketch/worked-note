@@ -112,7 +112,9 @@ class PasswordResetRequestView(APIView):
         from django.utils.encoding import force_bytes
 
         try:
-            user = User.objects.get(email=email)
+            from django.contrib.auth.models import User
+            # 대소문자 구분 없이 이메일 조회 (보안 강화)
+            user = User.objects.get(email__iexact=email)
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
