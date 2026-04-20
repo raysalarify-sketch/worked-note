@@ -52,6 +52,8 @@ const CATEGORY_MAP = {
   idea: { label: "아이디어", color: "#db2777", icon: "💡" },
 };
 
+const ROT_WORDS = ["기획", "개발", "디자인", "영업", "마케팅", "개인"];
+
 export default function App() {
   const [pg, setPg] = useState("login");
   const [view, setView] = useState("briefing");
@@ -70,9 +72,8 @@ export default function App() {
   const [rotIdx, setRotIdx] = useState(0);
 
   const [lf, setLf] = useState({ email: "", pw: "" });
-  const [sf, setSf] = useState({ name: "", email: "", pw: "" });
-  const [resetEmail, setResetEmail] = useState("");
-  const ROT_WORDS = ["기획", "개발", "디자인", "영업", "마케팅", "개인"];
+  const [sf, setSf] = useState({ name: "", email: "", password: "", password_confirm: "" });
+  const [ff, setFf] = useState({ email: "" });
 
   const flash = (m, t = "ok") => { setNotif({ m, t }); setTimeout(() => setNotif(null), 3000); };
 
@@ -95,7 +96,6 @@ export default function App() {
       const l = await api.lifecards.list(); setLifeCards(l);
       const m = await api.memos.list(tag); setMemos(m);
       
-      // 알람 체크 로직 (루틴 기반)
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
       b.routines.forEach(r => {
@@ -111,7 +111,7 @@ export default function App() {
     try {
       const res = await api.auth.login(lf.email, lf.pw);
       setUser(res.user); setPg("app"); refresh();
-    } catch (e) { flash("로그인 정보를 다시 확인해주세요.", "err"); }
+    } catch (e) { flash("이메일 또는 비밀번호가 올바르지 않습니다.", "err"); }
     finally { setSending(false); }
   };
 
@@ -131,40 +131,93 @@ export default function App() {
     finally { setSending(false); }
   };
 
-  const I = (p) => <input {...p} style={{ width: "100%", padding: "14px", border: `1px solid ${S.line}`, borderRadius: 12, fontSize: 15, background: "#f8fafc", ...p.style }} />;
+  const signup = async () => {
+    if (sf.password.length < 4) return flash("비밀번호는 4자 이상이어야 합니다.", "err");
+    if (sf.password !== sf.password_confirm) return flash("비밀번호가 일치하지 않습니다.", "err");
+    setSending(true);
+    try {
+      await api.auth.signup(sf);
+      flash("가입 성공! 로그인해 주세요."); setPg("login");
+    } catch (e) { flash("가입 중 오류가 발생했습니다.", "err"); }
+    finally { setSending(false); }
+  };
+
+  const forgot = async () => {
+    setSending(true);
+    try {
+      await api.auth.forgotRequest(ff.email);
+      flash("이메일로 재설정 링크를 보냈습니다."); setPg("login");
+    } catch (e) { flash("가입되지 않은 이메일입니다.", "err"); }
+    finally { setSending(false); }
+  };
+
+  const I = (p) => <input {...p} style={{ width: "100%", padding: "14px", border: `1px solid ${S.line}`, borderRadius: 12, fontSize: 15, background: "rgba(255,255,255,0.8)", ...p.style }} />;
   const B = ({ children, primary, small, style, ...p }) => <button {...p} style={{ border: "none", borderRadius: 12, fontSize: small ? 13 : 15, fontWeight: 700, cursor: "pointer", padding: small ? "10px 16px" : "16px 24px", background: primary ? S.accent : S.cream, color: primary ? "#fff" : S.ink, transition: "all .2s", ...style }}>{children}</button>;
 
   if (pg !== "app") return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/ai_smart_note_bg_1776684402748.png') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{css}</style>
-      <div style={{ width: "100%", maxWidth: 400, animation: "up .8s ease" }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <Logo size={60} />
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: S.ink, marginTop: 16 }}>({ROT_WORDS[rotIdx]}) 노트</h1>
-          <p style={{ color: S.muted, fontSize: 16, marginTop: 8 }}>AI가 정리해주는 똑똑한 메모장</p>
+      <div style={{ width: "100%", maxWidth: 420, animation: "up .8s ease" }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <Logo size={70} />
+          <h1 style={{ fontSize: 42, fontWeight: 900, background: "linear-gradient(to right, #4f46e5, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginTop: 12 }}>Worked Note</h1>
+          <p className="typewriter" style={{ color: S.ink, fontSize: 18, fontWeight: 700, marginTop: 8 }}>사용자의 하루를 기억하는 AI</p>
         </div>
-        <div className="card" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(20px)" }}>
-          <div style={{ display: "flex", borderBottom: `1px solid ${S.line}`, marginBottom: 24 }}>
-            {["login", "signup"].map(k => <button key={k} onClick={() => setPg(k)} style={{ flex: 1, padding: 12, background: "none", border: "none", borderBottom: pg === k ? `2px solid ${S.accent}` : "none", fontWeight: 700, color: pg === k ? S.ink : S.muted }}>{k === "login" ? "로그인" : "회원가입"}</button>)}
+        
+        <div className="card" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 32, padding: 32 }}>
+          <div style={{ display: "flex", background: "rgba(0,0,0,0.05)", padding: 6, borderRadius: 18, marginBottom: 32 }}>
+            {["login", "signup"].map(k => (
+              <button key={k} onClick={() => setPg(k)} style={{ flex: 1, padding: 12, background: pg === k ? "#fff" : "none", border: "none", borderRadius: 14, fontWeight: 800, color: pg === k ? S.accent : S.muted, cursor: "pointer", boxShadow: pg === k ? "0 4px 12px rgba(0,0,0,0.05)" : "none", transition: "all .3s" }}>{k === "login" ? "로그인" : "회원가입"}</button>
+            ))}
           </div>
+
           {pg === "login" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {I({ type: "email", value: lf.email, onChange: e => setLf({ ...lf, email: e.target.value }), placeholder: "이메일" })}
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {I({ type: "email", value: lf.email, onChange: e => setLf({ ...lf, email: e.target.value }), placeholder: "이메일 주소" })}
               {I({ type: "password", value: lf.pw, onChange: e => setLf({ ...lf, pw: e.target.value }), placeholder: "비밀번호" })}
-              <B primary onClick={login} disabled={sending}>{sending ? "로그인 중..." : "시작하기"}</B>
+              <B primary onClick={login} disabled={sending}>{sending ? "인증 중..." : "동기화 시작"}</B>
+              <button onClick={() => setPg("forgot")} style={{ background: "none", border: "none", color: S.muted, fontSize: 13, cursor: "pointer", fontWeight: 700 }}>비밀번호를 잊으셨나요?</button>
             </div>
           )}
+
           {pg === "signup" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {I({ value: sf.name, onChange: e => setSf({ ...sf, name: e.target.value }), placeholder: "이름" })}
-              {I({ type: "email", value: sf.email, onChange: e => setSf({ ...sf, email: e.target.value }), placeholder: "이메일" })}
-              {I({ type: "password", value: sf.pw, onChange: e => setSf({ ...sf, pw: e.target.value }), placeholder: "비밀번호" })}
-              <B primary onClick={() => api.auth.signup(sf).then(() => setPg("login"))}>가입하기</B>
+            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              {I({ value: sf.name, onChange: e => setSf({ ...sf, name: e.target.value }), placeholder: "전함" })}
+              {I({ type: "email", value: sf.email, onChange: e => setSf({ ...sf, email: e.target.value }), placeholder: "이메일 계정" })}
+              <div style={{ position: "relative" }}>
+                {I({ type: "password", value: sf.password, onChange: e => setSf({ ...sf, password: e.target.value }), placeholder: "비밀번호" })}
+                <span style={{ fontSize: 11, color: S.accent, fontWeight: 700, position: "absolute", bottom: -20, left: 4 }}>* 보안을 위해 4자 이상 입력해 주세요.</span>
+              </div>
+              <div style={{ marginTop: 12 }}>
+                {I({ type: "password", value: sf.password_confirm, onChange: e => setSf({ ...sf, password_confirm: e.target.value }), placeholder: "비밀번호 재입력" })}
+              </div>
+              <B primary onClick={signup} disabled={sending} style={{ marginTop: 8 }}>{sending ? "세팅 중..." : "AI 비서와 함께 시작하기"}</B>
+            </div>
+          )}
+
+          {pg === "forgot" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              <p style={{ textAlign: "center", fontSize: 14, color: S.muted, lineHeight: 1.6 }}>등록하신 이메일을 입력해 주세요.<br/>재설정 링크를 보내드립니다.</p>
+              {I({ type: "email", value: ff.email, onChange: e => setFf({ ...ff, email: e.target.value }), placeholder: "이메일 주소" })}
+              <B primary onClick={forgot} disabled={sending}>메일 요청하기</B>
+              <button onClick={() => setPg("login")} style={{ background: "none", border: "none", color: S.muted, fontSize: 13, cursor: "pointer", fontWeight: 700 }}>로그인으로 돌아가기</button>
             </div>
           )}
         </div>
       </div>
-      {notif && <div style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", background: notif.t === "err" ? "#ef4444" : S.ink, color: "#fff", padding: "16px 32px", borderRadius: 50, zIndex: 10000, fontWeight: 700, animation: "up .3s ease", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}>{notif.m}</div>}
+      {notif && <div style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", background: notif.t === "err" ? "#ef4444" : S.accent, color: "#fff", padding: "16px 32px", borderRadius: 50, zIndex: 10000, fontWeight: 800, animation: "up .3s ease", boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}>{notif.m}</div>}
+      <style>{`
+        .typewriter {
+          overflow: hidden;
+          border-right: 2px solid ${S.accent};
+          white-space: nowrap;
+          margin: 0 auto;
+          animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+          max-width: fit-content;
+        }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: ${S.accent}; } }
+      `}</style>
     </div>
   );
 
@@ -196,8 +249,8 @@ export default function App() {
           </div>
           <div style={{ padding: 24, borderTop: `1px solid ${S.line}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 12, background: S.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{user?.first_name?.[0] || user?.username?.[0]}</div>
-              <span style={{ fontWeight: 700, fontSize: 14 }}>{user?.first_name || user?.username}</span>
+              <div style={{ width: 36, height: 36, borderRadius: 12, background: S.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{user?.name?.[0] || user?.username?.[0]}</div>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>{user?.name || user?.username}</span>
             </div>
             <button onClick={() => api.auth.logout().then(() => window.location.reload())} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${S.line}`, background: "#fff", color: S.muted, cursor: "pointer", fontSize: 12 }}>로그아웃</button>
           </div>
@@ -320,7 +373,6 @@ export default function App() {
                 </div>
               </div>
               
-              {/* Desktop Editor Side Panel */}
               {!isMob && (
                 <div style={{ flex: 1, display: "flex", gap: 20 }}>
                   <div className="card" style={{ flex: 2, display: "flex", flexDirection: "column", padding: 32 }}>
@@ -338,7 +390,6 @@ export default function App() {
                     )}
                   </div>
                   
-                  {/* AI Side Panel */}
                   <div style={{ flex: 1, minWidth: 260 }}>
                     <div className="card" style={{ height: "100%", background: S.paper }}>
                       <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 20, color: S.accent }}>✨ AI 분석 결과</h3>
@@ -366,7 +417,6 @@ export default function App() {
                               ))}
                             </div>
                           )}
-                          {sel.extracted_infos?.length === 0 && !sel.routines?.length && <p style={{ fontSize: 12, color: S.muted }}>메모를 저장하여 정보를 추출해보세요.</p>}
                         </div>
                       ) : (
                         <p style={{ fontSize: 12, color: S.muted }}>메모를 선택하면 분석 결과가 여기에 표시됩니다.</p>
@@ -379,7 +429,6 @@ export default function App() {
           )}
         </div>
 
-        {/* Mobile Full Screen Editor Overlay */}
         {isMob && sel && (
           <div className="note-editor mobile-active" style={{ display: "flex", flexDirection: "column", background: "#fff" }}>
             <div style={{ height: 60, display: "flex", alignItems: "center", padding: "0 16px", borderBottom: `1px solid ${S.line}` }}>
@@ -388,8 +437,6 @@ export default function App() {
               <B primary small onClick={saveMemo}>{sending ? "..." : "저장"}</B>
             </div>
             <textarea value={ec} onChange={e => setEc(e.target.value)} placeholder="내용을 입력하세요..." style={{ flex: 1, border: "none", padding: 20, fontSize: 16, lineHeight: 1.7, resize: "none" }} />
-            
-            {/* Mobile AI Panel (Bottom Drawer Style) */}
             <div style={{ padding: 20, borderTop: `1px solid ${S.line}`, background: "#f8fafc" }}>
               <p style={{ fontSize: 12, fontWeight: 800, color: S.accent, marginBottom: 10 }}>✨ AI 분석 결과</p>
               <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
@@ -399,7 +446,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Mobile Bottom Tab Bar */}
         {isMob && (
           <div style={{ height: 64, display: "flex", borderTop: `1px solid ${S.line}`, background: "#fff" }}>
             {[["briefing", "🏠", "브리핑"], ["lifecards", "💳", "라이프"], ["memos", "📄", "메모"]].map(([v, i, l]) => (
@@ -410,9 +456,8 @@ export default function App() {
             ))}
           </div>
         )}
-
       </div>
-      {notif && <div style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", background: S.ink, color: "#fff", padding: "16px 32px", borderRadius: 50, zIndex: 10000, fontWeight: 700, animation: "up .3s ease", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}>{notif.m}</div>}
+      {notif && <div style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", background: notif.t === "err" ? "#ef4444" : S.accent, color: "#fff", padding: "16px 32px", borderRadius: 50, zIndex: 10000, fontWeight: 800, animation: "up .3s ease", boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}>{notif.m}</div>}
     </div>
   );
 }
