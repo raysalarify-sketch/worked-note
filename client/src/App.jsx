@@ -405,16 +405,12 @@ export default function App() {
     <div style={{minHeight:"100vh",background:"radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:S.font,padding:20}}>
       <style>{css}</style>
       <div style={{animation:"up .8s cubic-bezier(0.16, 1, 0.3, 1)",width:"100%",maxWidth:400}}>
-        <div style={{textAlign:"center",marginBottom:30}}>
-          {/* Premium Image Header */}
-          <div style={{ marginBottom: 20 }}>
-            <img src="/assets/login_artwork.png" alt="Premium Note" style={{ width: 120, height: 120, objectFit: "contain", filter: "drop-shadow(0 20px 40px rgba(79, 70, 229, 0.3))", animation: "up 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }} />
-          </div>
-          
-          <h1 style={{fontFamily:S.title,fontSize:34,color:S.ink,marginTop:10,letterSpacing:-1.5,fontWeight:800}}>
+        <div style={{textAlign:"center",marginBottom:44}}>
+          <Logo size={64}/>
+          <h1 style={{fontFamily:S.title,fontSize:34,color:S.ink,marginTop:20,letterSpacing:-1.5,fontWeight:800}}>
             (<span style={{background:"linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",display:"inline-block",minWidth:80,textAlign:"center",animation:"slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1)"}} key={rotIdx}>{ROT_WORDS[rotIdx]}</span>) 노트
           </h1>
-          <p style={{color:S.muted,fontSize:15,marginTop:8,fontWeight:500,letterSpacing:-0.3,opacity:0.8}}>모든 순간을 기록하는 최상의 비즈니스 경험</p>
+          <p style={{color:S.muted,fontSize:15,marginTop:10,fontWeight:500,letterSpacing:-0.3}}>나만의 통합 비즈니스 비서</p>
         </div>
         <div className="auth-card" style={{background:"rgba(255, 255, 255, 0.8)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderRadius:16,padding:"36px 32px",boxShadow:"0 20px 60px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.03)",border:"1px solid rgba(255,255,255,0.7)"}}>
           <div style={{display:"flex",borderBottom:`1px solid ${S.line}`,marginBottom:28}}>
