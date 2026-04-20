@@ -87,6 +87,17 @@ const css = `
 @keyframes gradientBg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(12px); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
 input:focus,textarea:focus{outline:none}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .sidebar { display: none !important; }
+  .mobile-header { display: flex !important; }
+  .app-container { flex-direction: column !important; }
+  .main-content { padding: 12px !important; }
+  .auth-card { padding: 24px 20px !important; margin: 10px !important; width: auto !important; }
+  .note-list { width: 100% !important; border-right: none !important; }
+  .note-editor.mobile-active { position: fixed; inset: 0; z-index: 100; display: flex !important; }
+}
 `;
 
 const S = {
@@ -401,7 +412,7 @@ export default function App() {
           </h1>
           <p style={{color:S.muted,fontSize:15,marginTop:10,fontWeight:500,letterSpacing:-0.3}}>나만의 통합 비즈니스 비서</p>
         </div>
-        <div style={{background:"rgba(255, 255, 255, 0.8)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderRadius:16,padding:"36px 32px",boxShadow:"0 20px 60px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.03)",border:"1px solid rgba(255,255,255,0.7)"}}>
+        <div className="auth-card" style={{background:"rgba(255, 255, 255, 0.8)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderRadius:16,padding:"36px 32px",boxShadow:"0 20px 60px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.03)",border:"1px solid rgba(255,255,255,0.7)"}}>
           <div style={{display:"flex",borderBottom:`1px solid ${S.line}`,marginBottom:28}}>
             {[["login","로그인"],["signup","회원가입"]].map(([k,l])=><button key={k} onClick={()=>{setPg(k);setLe("");setSe("");}} style={{flex:1,padding:"10px 0",background:"none",border:"none",borderBottom:pg===k?`2px solid ${S.accent}`:"2px solid transparent",color:pg===k?S.ink:S.muted,fontSize:14,fontWeight:pg===k?600:500,cursor:"pointer",fontFamily:S.font,transition:"all .2s"}}>{l}</button>)}
           </div>

@@ -123,45 +123,69 @@ class PasswordResetRequestView(APIView):
             
             reset_link = f"{domain}/reset-password/{uid}/{token}/"
             
-            # HTML 템플릿 생성
+            # 프리미엄 반응형 HTML 메타데이터 및 템플릿
             html_content = f"""
-            <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; max-width: 540px; margin: 0 auto; padding: 40px 20px; color: #1f2937; background-color: #ffffff; border-radius: 12px; border: 1px solid #f3f4f6;">
-                <div style="text-align: center; margin-bottom: 32px;">
-                    <div style="display: inline-block; padding: 12px; background: #f3f4f6; border-radius: 12px; margin-bottom: 16px;">
-                        <span style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: #4f46e5;">WORKD NOTE</span>
-                    </div>
-                </div>
-                <div style="background-color: #f9fafb; padding: 32px; border-radius: 12px; text-align: center;">
-                    <h2 style="font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 12px 0;">비밀번호 보완 안내</h2>
-                    <p style="font-size: 15px; line-height: 1.6; color: #4b5563; margin: 0 0 24px 0;">
-                        안녕하세요. 워크드 노트를 이용해 주셔서 감사합니다.<br>
-                        계정의 새로운 비밀번호 설정을 위한 요청이 접수되었습니다.<br>
-                        아래 버튼을 클릭하여 안전하게 변경을 완료해 주세요.
-                    </p>
-                    <a href="{reset_link}" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 16px 36px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);">비밀번호 재설정하기</a>
-                </div>
-                <div style="margin-top: 32px; padding: 0 10px;">
-                    <ul style="padding: 0; margin: 0; list-style: none; font-size: 13px; color: #9ca3af; line-height: 1.8;">
-                        <li style="margin-bottom: 4px;">• 본인이 요청하지 않은 경우 이 메일을 안전하게 무시하셔도 됩니다.</li>
-                        <li>• 보안을 위해 해당 링크는 일정 시간이 지나면 링크가 자동으로 만료됩니다.</li>
-                    </ul>
-                </div>
-                <div style="border-top: 1px solid #f3f4f6; margin-top: 32px; padding-top: 24px; text-align: center;">
-                    <p style="font-size: 12px; color: #9ca3af; margin: 0;">&copy; 2026 WORKD NOTE Team. All rights reserved.</p>
-                </div>
-            </div>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>비밀번호 재설정</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+                    <tr>
+                        <td align="center" style="padding: 40px 10px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 500px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.05);">
+                                <!-- Top Accent -->
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%); padding: 40px 20px; text-align: center;">
+                                        <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 18px; margin: 0 auto 16px; display: inline-flex; align-items: center; justify-content: center;">
+                                            <span style="font-size: 32px;">🔒</span>
+                                        </div>
+                                        <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -1px;">Password Reset</h1>
+                                    </td>
+                                </tr>
+                                <!-- Main Content -->
+                                <tr>
+                                    <td style="padding: 40px 32px; text-align: center;">
+                                        <h2 style="font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 12px 0;">계정 보안 확인</h2>
+                                        <p style="font-size: 15px; color: #4b5563; line-height: 1.7; margin: 0 0 32px 0;">
+                                            비밀번호 재설정 요청을 받았습니다.<br>아래 버튼을 눌러 새로운 비밀번호를 설정하시면 즉시 로그인이 가능합니다.
+                                        </p>
+                                        <a href="{reset_link}" style="display: block; background-color: #4f46e5; color: #ffffff; padding: 18px; border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: 700; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);">새 비밀번호 설정하기</a>
+                                        <p style="font-size: 13px; color: #9ca3af; margin: 24px 0 0 0;">
+                                            보안을 위해 본인 외에는 이 링크를 공유하지 마세요.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #f3f4f6;">
+                                        <p style="font-size: 12px; color: #9ca3af; margin: 0; line-height: 1.6;">
+                                            문의사항이 있으시면 고객 지원팀으로 연락주세요.<br>
+                                            &copy; 2026 Smart Note Team. All rights reserved.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
             """
             
             try:
                 send_mail(
-                    '[워크드 노트] 비밀번호 재설정 확인 메일입니다.',
+                    '[Smart Note] 보안 인증 완료를 위한 확인 링크입니다.',
                     f'비밀번호를 초기화하려면 아래 링크를 클릭하세요:\n\n{reset_link}',
                     settings.DEFAULT_FROM_EMAIL,
                     [email],
                     fail_silently=False,
                     html_message=html_content
                 )
-                print(f"DEBUG: Premium HTML Email successfully sent to {email}")
+                print(f"DEBUG: Ultra premium responsive HTML Email sent to {email}")
             except Exception as e:
                 print(f"CRITICAL ERROR: Failed to send email to {email}. Error: {str(e)}")
                 return Response({'message': '이메일 발송 중 서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
