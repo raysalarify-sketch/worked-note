@@ -1,25 +1,27 @@
 import re
+import uuid
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Q
 from django.utils import timezone
-from .models import Memo, Contact, RoutineAlert, ExtractedInfo, DailyCheck
+from .models import Memo, Contact, RoutineAlert, ExtractedInfo, DailyCheck, MemoComment, Collaborator
 from .serializers import (
     MemoSerializer, MemoListSerializer, ContactSerializer, 
-    RoutineAlertSerializer, ExtractedInfoSerializer
+    RoutineAlertSerializer, ExtractedInfoSerializer, 
+    MemoCommentSerializer, CollaboratorSerializer
 )
 
 class AIAnalyzer:
     """메모 본문을 분석하여 카테고리 분류 및 정보 추출을 수행하는 엔진"""
     
     CATEGORIES = {
-        'routine': ['매일', '매주', '아침마다', '저녁마다', '루틴', '습관', '반복'],
+        'routine': ['매일', '매주', '아침마다', '저녁마다', '루틴', '할일', '반복'],
         'health': ['약', '병원', '진료', '운동', '비타민', '영양제', '혈압', '체중'],
-        'schedule': ['회의', '미팅', '약속', '마감', '발표', '면접', '시', '분'],
-        'person': ['님', '씨', '팀장', '대표', '전화', '이메일'],
-        'finance': ['원', '만원', '결제', '입금', '급여', '보험', '카드', '이체'],
+        'schedule': ['회의', '미팅', '약속', '마감', '발표', '면접', '행사', '날짜'],
+        'person': ['님', '씨', '연락처', '번호', '전화', '이메일'],
+        'finance': ['원', '만원', '결제', '송금', '급여', '보험', '카드', '이체'],
         'work': ['프로젝트', '업무', '보고', '개발', '배포', 'API', '이슈'],
     }
 
@@ -38,7 +40,7 @@ class AIAnalyzer:
         routine_patterns = [
             (r'매일 아침\s+(.+)', '08:00'),
             (r'매일 저녁\s+(.+)', '20:00'),
-            (r'점심 후\s+(.+)', '13:00'),
+            (r'점심 때\s+(.+)', '12:00'),
             (r'자기 전\s+(.+)', '22:00'),
             (r'(\d{1,2})시\s+(.+)', None), # 시간 직접 언급
         ]
@@ -67,7 +69,7 @@ class AIAnalyzer:
                 data={'name': m.group(1), 'phone': m.group(2)}
             )
 
-        # 4. 재정 추출
+        # 4. 금융 추출
         money_pattern = r'(.+)\s+(\d+)(?:만원|원)'
         for m in re.finditer(money_pattern, content):
             ExtractedInfo.objects.create(
@@ -138,7 +140,7 @@ class MemoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def add_comment(self, request, pk=None):
-        memo = self.get_object() # 여기서 get_object는 queryset에 기반함 (주인이거나 협업자)
+        memo = self.get_object()
         content = request.data.get('content')
         if not content: return Response({'error': '내용을 입력하세요.'}, status=400)
         
@@ -179,6 +181,7 @@ class SharedMemoView(APIView):
             memo = Memo.objects.get(share_slug=slug, is_public=True)
             password = request.query_params.get('password')
             
+            # 비밀번호 보호 처리
             if memo.password and password != memo.password:
                 data = MemoSerializer(memo, context={'request': request}).data
                 data['content'] = "🔒 이 메모는 비밀번호로 잠겨 있습니다."
@@ -247,7 +250,7 @@ class BriefingView(APIView):
         
         if hour < 6: greet = "고요한 새벽이네요"
         elif hour < 12: greet = "기분 좋은 아침입니다"
-        elif hour < 18: greet = "활기찬 오후 보내고 계신가요?"
+        elif hour < 18: greet = "활기찬 오후 보내고 계신가요"
         else: greet = "오늘 하루도 수고 많으셨어요"
 
         routines = RoutineAlert.objects.filter(user=user, is_active=True).order_by('time')
@@ -255,17 +258,11 @@ class BriefingView(APIView):
         health_memos = Memo.objects.filter(user=user, categories__contains='health')[:3]
 
         return Response({
-            'greeting': f"{greet}, {user.first_name or user.username}님!",
+            'greeting': f"{greet}, {user.first_name or user.username}님",
             'routines': RoutineAlertSerializer(routines, many=True).data,
             'schedules': ExtractedInfoSerializer(schedules, many=True).data,
             'health_tips': MemoListSerializer(health_memos, many=True).data
         })
-
-    @action(detail=False, methods=['post'])
-    def check_routine(self, request, pk=None):
-        routine = RoutineAlert.objects.get(pk=pk, user=request.user)
-        DailyCheck.objects.get_or_create(user=request.user, routine=routine, checked_at=timezone.now().date())
-        return Response({'status': 'checked'})
 
 
 class LifeCardView(APIView):
@@ -285,7 +282,7 @@ class LifeCardView(APIView):
                     'recent': MemoListSerializer(cat_memos[:3], many=True).data
                 })
         
-        # 특수 카드: 연락처 및 재정 요약
+        # 특수 카드: 연락처 및 금융 요약
         people = ExtractedInfo.objects.filter(user=user, info_type='person')[:5]
         finance = ExtractedInfo.objects.filter(user=user, info_type='finance')[:5]
         
