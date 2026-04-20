@@ -8,25 +8,9 @@ const fmtDate = (d) => {
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}시간 전`;
   return `${date.getMonth() + 1}.${date.getDate()}`;
 };
-const fmtFull = (d) => { const t = new Date(d); return `${t.getFullYear()}.${String(t.getMonth()+1).padStart(2,"0")}.${String(t.getDate()).padStart(2,"0")} ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`; };
-
-const detectSchedules = (c) => {
-  if(!c) return [];
-  const r = [];
-  [/(\d{1,2})[\/\.\-](\d{1,2})[\s]?(\d{1,2}:\d{2})?/g, /(오전|오후)?\s?(\d{1,2})(시|:)(\d{0,2})?/g, /(내일|모레|다음주|이번주|오늘)/g, /(회의|미팅|점심|저녁|약속|마감|발표|면접|출장)/g].forEach((p, i) => { let m; while ((m = p.exec(c)) !== null) r.push({ type: i < 2 ? "time" : i === 2 ? "rel" : "event", text: m[0] }); });
-  return r;
-};
-const extractKw = (c) => {
-  if(!c) return [];
-  const sw = new Set(["은","는","이","가","을","를","에","의","로","와","과","도","만","에서","으로","하고","그리고","하는","있는","없는","대한","위한","통해","같은","있다","없다","한다","하다"]);
-  const w = c.replace(/[^\w\sㄱ-ㅎㅏ-ㅣ가-힣]/g, "").split(/\s+/).filter((x) => x.length > 1 && !sw.has(x));
-  const f = {}; w.forEach((x) => (f[x] = (f[x] || 0) + 1));
-  return Object.entries(f).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([x]) => x);
-};
-const summarize = (c) => { if (!c || c.length < 20) return null; const s = c.split(/[.\n!?]+/).filter((x) => x.trim().length > 5); return s.length <= 1 ? null : s[0].trim().slice(0, 60) + (s[0].length > 60 ? "..." : ""); };
 
 const Logo = ({ size = 28 }) => (
-  <div style={{ position: "relative", width: size * 1.5, height: size * 1.5, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
+  <div style={{ position: "relative", width: size * 1.5, height: size * 1.5, display: "flex", alignItems: "center", justifyContent: "center" }}>
     <svg width={size} height={size * 1.2} viewBox="0 0 40 48" fill="none">
       <rect x="2" y="4" width="32" height="40" rx="6" fill="rgba(255, 255, 255, 0.9)" stroke="#4f46e5" strokeWidth="1" />
       <line x1="10" y1="14" x2="26" y2="14" stroke="#e5e7eb" strokeWidth="2" />
@@ -40,156 +24,126 @@ const Logo = ({ size = 28 }) => (
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-body{font-family: 'Inter', 'IBM Plex Sans KR', sans-serif; background: #fff;}
+body{font-family: 'Inter', 'IBM Plex Sans KR', sans-serif; background: #fff; color: #111827;}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px}
-@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes up{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0;transform:scale(0.98)}to{opacity:1;transform:scale(1)}}
 input:focus,textarea:focus{outline:none}
-
-/* Mobile Overrides */
+.card{background:#fff; border-radius:16px; border:1px solid #e2e8f0; padding:20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);}
 @media (max-width: 768px) {
-  .note-editor.mobile-active { position: fixed; inset: 0; z-index: 1000; display: flex !important; animation: up .3s cubic-bezier(0.16, 1, 0.3, 1); }
+  .sidebar { display: none !important; }
+  .note-editor.mobile-active { position: fixed; inset: 0; z-index: 1000; animation: up .3s ease; }
 }
 `;
 
 const S = {
   font: "'Inter', 'IBM Plex Sans KR', sans-serif",
-  title: "'Inter', sans-serif",
-  paper: "#ffffff",
-  cream: "#f9fafb",
-  ink: "#111827",
-  muted: "#64748b",
-  line: "#e2e8f0",
-  accent: "#4f46e5",
+  paper: "#ffffff", cream: "#f9fafb", ink: "#111827", muted: "#64748b", line: "#e2e8f0", accent: "#4f46e5",
 };
 
-const COLORS = ["#f8fafc", "#4f46e5", "#059669", "#d97706", "#dc2626", "#7c3aed", "#db2777"];
+const CATEGORY_MAP = {
+  routine: { label: "루틴", color: "#4f46e5", icon: "⏰" },
+  health: { label: "건강", color: "#059669", icon: "💊" },
+  schedule: { label: "일정", color: "#d97706", icon: "📅" },
+  person: { label: "연락처", color: "#dc2626", icon: "👥" },
+  finance: { label: "재정", color: "#7c3aed", icon: "💳" },
+  work: { label: "업무", color: "#3b82f6", icon: "💼" },
+  idea: { label: "아이디어", color: "#db2777", icon: "💡" },
+};
 
 export default function App() {
   const [pg, setPg] = useState("login");
+  const [view, setView] = useState("briefing");
   const [user, setUser] = useState(null);
   const [memos, setMemos] = useState([]);
-  const [contacts, setContacts] = useState([]);
   const [sel, setSel] = useState(null);
-  const [view, setView] = useState("memos");
+  const [briefing, setBriefing] = useState(null);
+  const [lifeCards, setLifeCards] = useState(null);
   const [isMob, setIsMob] = useState(window.innerWidth < 768);
   const [notif, setNotif] = useState(null);
   const [sending, setSending] = useState(false);
-  
-  const [lf, setLf] = useState({ email: "", pw: "" });
-  const [sf, setSf] = useState({ name: "", email: "", pw: "" });
-  const [le, setLe] = useState("");
-  const [se, setSe] = useState("");
-  
+  const [q, setQ] = useState("");
+  const [tag, setTag] = useState("");
   const [et, setEt] = useState("");
   const [ec, setEc] = useState("");
-  const [q, setQ] = useState("");
-  const [tag, setTag] = useState(0);
   const [rotIdx, setRotIdx] = useState(0);
-  const ROT_WORDS = ["기획", "개발", "디자인", "영업", "마케팅", "개인"];
-  const [wsName, setWsName] = useState(localStorage.getItem("wn-wsname") || "나의 노트");
-  const [editWs, setEditWs] = useState(false);
-  const [conEdit, setConEdit] = useState(null);
-  const [conForm, setConForm] = useState(false);
 
+  const [lf, setLf] = useState({ email: "", pw: "" });
+  const [sf, setSf] = useState({ name: "", email: "", pw: "" });
   const [resetEmail, setResetEmail] = useState("");
-  const [resetForm, setResetForm] = useState({ uid: "", token: "", newPw: "" });
+  const ROT_WORDS = ["기획", "개발", "디자인", "영업", "마케팅", "개인"];
 
-  const flash = (m, t = "ok") => { setNotif({ m, t }); setTimeout(() => setNotif(null), 2500); };
+  const flash = (m, t = "ok") => { setNotif({ m, t }); setTimeout(() => setNotif(null), 3000); };
 
   useEffect(() => {
     const handleResize = () => setIsMob(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
+    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
-    api.auth.me().then(u => { setUser(u); setPg("app"); load(); }).catch(() => {});
+    api.auth.me().then(u => { setUser(u); setPg("app"); refresh(); }).catch(() => {});
     const intv = setInterval(() => setRotIdx(p => (p + 1) % ROT_WORDS.length), 2000);
     return () => clearInterval(intv);
   }, []);
 
-  const load = async () => {
+  const refresh = async () => {
     try {
-      const m = await api.memos.list(); setMemos(m.results || m);
-      const c = await api.contacts.list(); setContacts(c.results || c);
+      const b = await api.briefing.today(); setBriefing(b);
+      const l = await api.lifecards.list(); setLifeCards(l);
+      const m = await api.memos.list(tag); setMemos(m);
+      
+      // 알람 체크 로직 (루틴 기반)
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+      b.routines.forEach(r => {
+        if (r.time === timeStr && Notification.permission === "granted" && !r.is_checked) {
+          new Notification("Smart Note 루틴 알림", { body: r.task, icon: "/favicon.ico" });
+        }
+      });
     } catch (e) {}
   };
 
   const login = async () => {
-    setSending(true); setLe("");
-    try {
-      const res = await api.auth.login(lf.email, lf.pw);
-      setUser(res.user); setPg("app"); load();
-    } catch (e) { setLe("이메일 또는 비밀번호를 확인해주세요."); }
-    finally { setSending(false); }
-  };
-
-  const signup = async () => {
-    setSending(true); setSe("");
-    try {
-      await api.auth.signup({ email: sf.email, first_name: sf.name, password: sf.pw, password_confirm: sf.pw });
-      flash("가입 완료!"); setPg("login");
-    } catch (e) { setSe("이미 가입된 이메일이거나 정보가 올바르지 않습니다."); }
-    finally { setSending(false); }
-  };
-
-  const requestReset = async () => {
     setSending(true);
     try {
-      await api.auth.requestPasswordReset(resetEmail);
-      flash("인증 메일이 성공적으로 발송되었습니다!"); setPg("login");
-    } catch (e) { flash("현재 등록된 계정이 없습니다.", "err"); }
+      const res = await api.auth.login(lf.email, lf.pw);
+      setUser(res.user); setPg("app"); refresh();
+    } catch (e) { flash("로그인 정보를 다시 확인해주세요.", "err"); }
     finally { setSending(false); }
-  };
-
-  const confirmReset = async () => {
-    try {
-      await api.auth.confirmPasswordReset({ uid: resetForm.uid, token: resetForm.token, new_password: resetForm.newPw });
-      flash("비밀번호 변경 완료!"); setPg("login");
-    } catch (e) { flash("오류가 발생했습니다.", "err"); }
   };
 
   const saveMemo = async () => {
     if(!sel) return;
     setSending(true);
     try {
+      const data = { title: et, content: ec };
       if(sel.id === "new") {
-        const m = await api.memos.create({ title: et, content: ec, color: sel.color || 1 });
-        setMemos([m, ...memos]); setSel(m);
+        const m = await api.memos.create(data); setSel(m);
       } else {
-        await api.memos.patch(sel.id, { title: et, content: ec });
-        setMemos(memos.map(m => m.id === sel.id ? { ...m, title: et, content: ec } : m));
+        await api.memos.patch(sel.id, data);
       }
-      flash("저장되었습니다.");
-    } catch (e) { flash("저장 실패", "err"); }
+      flash("AI가 메모를 분석하여 정리했습니다.");
+      refresh();
+    } catch (e) { flash("저장 중 오류 발생", "err"); }
     finally { setSending(false); }
   };
 
-  const deleteMemo = async () => {
-    if(!sel || sel.id === "new") { setSel(null); return; }
-    if(!window.confirm("정말 삭제하시겠습니까?")) return;
-    try {
-      await api.memos.delete(sel.id);
-      setMemos(memos.filter(m => m.id !== sel.id)); setSel(null);
-      flash("삭제되었습니다.");
-    } catch (e) { flash("삭제 실패", "err"); }
-  };
-
-  const I = (p) => <input {...p} style={{ width: "100%", padding: "12px 14px", border: `1px solid ${S.line}`, borderRadius: 10, fontSize: 15, background: "#f8fafc", ...p.style }} />;
-  const B = ({ children, primary, small, style, ...p }) => <button {...p} style={{ border: "none", borderRadius: 10, fontSize: small ? 13 : 15, fontWeight: 700, cursor: "pointer", padding: small ? "8px 16px" : "14px 20px", background: primary ? S.accent : S.cream, color: primary ? "#fff" : S.ink, transition: "all .2s", ...style }}>{children}</button>;
+  const I = (p) => <input {...p} style={{ width: "100%", padding: "14px", border: `1px solid ${S.line}`, borderRadius: 12, fontSize: 15, background: "#f8fafc", ...p.style }} />;
+  const B = ({ children, primary, small, style, ...p }) => <button {...p} style={{ border: "none", borderRadius: 12, fontSize: small ? 13 : 15, fontWeight: 700, cursor: "pointer", padding: small ? "10px 16px" : "16px 24px", background: primary ? S.accent : S.cream, color: primary ? "#fff" : S.ink, transition: "all .2s", ...style }}>{children}</button>;
 
   if (pg !== "app") return (
     <div style={{ minHeight: "100vh", background: "radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{css}</style>
       <div style={{ width: "100%", maxWidth: 400, animation: "up .8s ease" }}>
-        <div style={{ textAlign: "center", marginBottom: 30 }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
           <Logo size={60} />
           <h1 style={{ fontSize: 32, fontWeight: 800, color: S.ink, marginTop: 16 }}>({ROT_WORDS[rotIdx]}) 노트</h1>
-          <p style={{ color: S.muted, fontSize: 15, marginTop: 8 }}>나만의 통합 비즈니스 비서</p>
+          <p style={{ color: S.muted, fontSize: 16, marginTop: 8 }}>AI가 정리해주는 똑똑한 메모장</p>
         </div>
-        <div style={{ background: "rgba(255,255,255,0.9)", backdropFilter: "blur(20px)", padding: 32, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.05)" }}>
+        <div className="card" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(20px)" }}>
           <div style={{ display: "flex", borderBottom: `1px solid ${S.line}`, marginBottom: 24 }}>
             {["login", "signup"].map(k => <button key={k} onClick={() => setPg(k)} style={{ flex: 1, padding: 12, background: "none", border: "none", borderBottom: pg === k ? `2px solid ${S.accent}` : "none", fontWeight: 700, color: pg === k ? S.ink : S.muted }}>{k === "login" ? "로그인" : "회원가입"}</button>)}
           </div>
@@ -197,9 +151,7 @@ export default function App() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {I({ type: "email", value: lf.email, onChange: e => setLf({ ...lf, email: e.target.value }), placeholder: "이메일" })}
               {I({ type: "password", value: lf.pw, onChange: e => setLf({ ...lf, pw: e.target.value }), placeholder: "비밀번호" })}
-              {le && <p style={{ color: "#ef4444", fontSize: 13 }}>{le}</p>}
-              <B primary onClick={login} disabled={sending}>{sending ? "처리 중..." : "로그인하기"}</B>
-              <button onClick={() => setPg("forgot")} style={{ background: "none", border: "none", color: S.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>비밀번호 찾기</button>
+              <B primary onClick={login} disabled={sending}>{sending ? "로그인 중..." : "시작하기"}</B>
             </div>
           )}
           {pg === "signup" && (
@@ -207,143 +159,260 @@ export default function App() {
               {I({ value: sf.name, onChange: e => setSf({ ...sf, name: e.target.value }), placeholder: "이름" })}
               {I({ type: "email", value: sf.email, onChange: e => setSf({ ...sf, email: e.target.value }), placeholder: "이메일" })}
               {I({ type: "password", value: sf.pw, onChange: e => setSf({ ...sf, pw: e.target.value }), placeholder: "비밀번호" })}
-              {se && <p style={{ color: "#ef4444", fontSize: 13 }}>{se}</p>}
-              <B primary onClick={signup} disabled={sending}>가입 완료</B>
-            </div>
-          )}
-          {pg === "forgot" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <p style={{ fontSize: 13, color: S.muted }}>가입하신 이메일로 인증 링크를 보냅니다.</p>
-              {I({ type: "email", value: resetEmail, onChange: e => setResetEmail(e.target.value), placeholder: "email@example.com" })}
-              <B primary onClick={requestReset} disabled={sending}>인증 메일 요청</B>
-              <button onClick={() => setPg("login")} style={{ background: "none", border: "none", color: S.muted, fontSize: 13, cursor: "pointer" }}>돌아가기</button>
+              <B primary onClick={() => api.auth.signup(sf).then(() => setPg("login"))}>가입하기</B>
             </div>
           )}
         </div>
       </div>
-      {notif && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: notif.t === "err" ? "#ef4444" : S.ink, color: "#fff", padding: "10px 20px", borderRadius: 12, zIndex: 10000, fontWeight: 600, animation: "up .3s ease" }}>{notif.m}</div>}
+      {notif && <div style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", background: notif.t === "err" ? "#ef4444" : S.ink, color: "#fff", padding: "16px 32px", borderRadius: 50, zIndex: 10000, fontWeight: 700, animation: "up .3s ease", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}>{notif.m}</div>}
     </div>
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: isMob ? "column" : "row", height: "100vh", background: S.paper, overflow: "hidden", fontFamily: S.font }}>
+    <div style={{ display: "flex", height: "100vh", background: S.cream, overflow: "hidden", fontFamily: S.font }}>
       <style>{css}</style>
       
-      {/* Sidebar (Desktop) */}
+      {/* Sidebar */}
       {!isMob && (
-        <div className="sidebar" style={{ width: 260, borderRight: `1px solid ${S.line}`, display: "flex", flexDirection: "column", background: S.cream }}>
-          <div style={{ padding: "24px 20px", display: "flex", alignItems: "center", gap: 10 }}>
-            <Logo size={24} />
-            <div style={{ flex: 1 }}>
-              {editWs ? <input autoFocus value={wsName} onChange={e => setWsName(e.target.value)} onBlur={() => { setEditWs(false); localStorage.setItem("wn-wsname", wsName); }} style={{ width: "100%", background: "none", border: "none", borderBottom: `2px solid ${S.ink}`, fontSize: 16, fontWeight: 700 }} /> : <h2 onClick={() => setEditWs(true)} style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>{wsName}</h2>}
-            </div>
+        <div style={{ width: 260, borderRight: `1px solid ${S.line}`, display: "flex", flexDirection: "column", background: "#fff" }}>
+          <div style={{ padding: "32px 24px", display: "flex", alignItems: "center", gap: 12 }}>
+            <Logo size={28} />
+            <span style={{ fontWeight: 800, fontSize: 18, color: S.accent }}>Smart Note</span>
           </div>
-          <div style={{ padding: "0 12px", display: "flex", flexDirection: "column", gap: 4 }}>
-            {[["memos", "📝 전체 메모"], ["contacts", "👥 주소록"]].map(([v, l]) => (
-              <button key={v} onClick={() => { setView(v); setSel(null); }} style={{ padding: "12px 16px", background: view === v ? "rgba(79,70,229,0.08)" : "none", color: view === v ? S.accent : S.ink, border: "none", borderRadius: 10, textAlign: "left", fontSize: 14, fontWeight: view === v ? 600 : 500, cursor: "pointer" }}>{l}</button>
+          <div style={{ padding: "0 12px", flex: 1 }}>
+            <B primary style={{ width: "calc(100% - 16px)", margin: "0 8px 24px", padding: 14 }} onClick={() => { setSel({ id: "new" }); setEt(""); setEc(""); setView("memos"); }}>+ 새 메모 쓰기</B>
+            {[["briefing", "🏠 오늘의 브리핑"], ["lifecards", "💳 라이프카드"], ["memos", "📄 전체 메모"]].map(([v, l]) => (
+              <button key={v} onClick={() => setView(v)} style={{ width: "100%", padding: "14px 18px", background: view === v ? "rgba(79,70,229,0.06)" : "none", color: view === v ? S.accent : S.ink, border: "none", borderRadius: 12, textAlign: "left", fontWeight: 700, cursor: "pointer", marginBottom: 4 }}>{l}</button>
             ))}
-          </div>
-          <div style={{ marginTop: "auto", padding: 20, borderTop: `1px solid ${S.line}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 15 }}>
-              <div style={{ width: 32, height: 32, borderRadius: "50%", background: S.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{user?.first_name?.[0].toUpperCase() || "U"}</div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{user?.first_name}님</div>
+            <div style={{ marginTop: 24, padding: "0 12px" }}>
+              <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 12 }}>AI 분류</p>
+              {Object.entries(CATEGORY_MAP).map(([k, cfg]) => (
+                <button key={k} onClick={() => { setTag(k); setView("memos"); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 8px", background: "none", border: "none", cursor: "pointer", opacity: tag === k ? 1 : 0.6 }}>
+                  <span>{cfg.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{cfg.label}</span>
+                </button>
+              ))}
             </div>
-            <button onClick={() => api.auth.logout().then(() => window.location.reload())} style={{ width: "100%", padding: "10px", borderRadius: 8, border: `1px solid ${S.line}`, background: "#fff", color: S.muted, fontSize: 12, cursor: "pointer" }}>로그아웃</button>
+          </div>
+          <div style={{ padding: 24, borderTop: `1px solid ${S.line}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 12, background: S.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{user?.first_name?.[0] || user?.username?.[0]}</div>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>{user?.first_name || user?.username}</span>
+            </div>
+            <button onClick={() => api.auth.logout().then(() => window.location.reload())} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${S.line}`, background: "#fff", color: S.muted, cursor: "pointer", fontSize: 12 }}>로그아웃</button>
           </div>
         </div>
       )}
 
-      {/* Main View Area */}
+      {/* Main Content Area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
         
         {/* Mobile Header */}
         {isMob && (
-          <div style={{ height: 60, display: "flex", alignItems: "center", padding: "0 16px", borderBottom: `1px solid ${S.line}`, background: "#fff", zIndex: 10 }}>
+          <div style={{ height: 60, background: "#fff", display: "flex", alignItems: "center", padding: "0 16px", borderBottom: `1px solid ${S.line}` }}>
             <Logo size={20} />
-            <span style={{ marginLeft: 8, fontWeight: 700 }}>{wsName}</span>
+            <span style={{ marginLeft: 8, fontWeight: 800, color: S.accent }}>Smart Note</span>
             <div style={{ marginLeft: "auto" }}>
-              <button onClick={() => api.auth.logout().then(() => window.location.reload())} style={{ background: "none", border: "none", fontSize: 12, color: S.muted }}>로그아웃</button>
+              <button onClick={() => { setSel({ id: "new" }); setEt(""); setEc(""); }} style={{ background: S.accent, color: "#fff", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 700 }}>+ 쓰기</button>
             </div>
           </div>
         )}
 
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: isMob ? 16 : 40 }}>
           
-          {/* List Component (Hidden on mobile if editor is active) */}
-          {(!isMob || (isMob && !sel && !conEdit)) && (
-            <div style={{ width: isMob ? "100%" : 320, borderRight: isMob ? "none" : `1px solid ${S.line}`, display: "flex", flexDirection: "column", background: "#fff" }}>
-              {view === "memos" ? (
-                <>
-                  <div style={{ padding: 16, borderBottom: `1px solid ${S.line}` }}>
-                    <input value={q} onChange={e => setQ(e.target.value)} placeholder="메모 검색..." style={{ width: "100%", padding: 10, borderRadius: 10, border: `1px solid ${S.line}`, background: S.paper, fontSize: 14 }} />
-                  </div>
-                  <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
-                    {memos.filter(m => !q || m.title.includes(q) || m.content.includes(q)).length === 0 ? (
-                      <div style={{ padding: 40, textAlign: "center", color: S.muted, fontSize: 13 }}>메모가 없습니다.</div>
-                    ) : (
-                      memos.filter(m => !q || (m.title||"").includes(q) || (m.content||"").includes(q)).map(m => (
-                        <div key={m.id} onClick={() => { setSel(m); setEt(m.title); setEc(m.content); }} style={{ padding: 16, borderRadius: 12, cursor: "pointer", background: sel?.id === m.id ? "rgba(79,70,229,0.05)" : "none", marginBottom: 4, transition: "all .2s" }}>
-                          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{m.title || "제목 없음"}</div>
-                          <div style={{ fontSize: 12, color: S.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.content.substring(0, 50)}</div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  <div style={{ padding: 16, borderTop: isMob ? "none" : `1px solid ${S.line}` }}>
-                    <B primary style={{ width: "100%" }} onClick={() => { setSel({ id: "new", color: 1 }); setEt(""); setEc(""); }}>+ 새 메모 작성</B>
-                  </div>
-                </>
-              ) : (
-                <div style={{ padding: 24 }}>
-                  <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>주소록</h2>
-                  {contacts.length === 0 ? <p style={{ color: S.muted }}>등록된 연락처가 없습니다.</p> : contacts.map(c => <div key={c.id} style={{ padding: 12, borderBottom: `1px solid ${S.line}` }}>{c.name} ({c.phone})</div>)}
-                  <B small primary style={{ marginTop: 20 }}>연락처 추가</B>
+          {/* View: Briefing */}
+          {view === "briefing" && briefing && (
+            <div style={{ maxWidth: 800, margin: "0 auto", animation: "up .5s ease" }}>
+              <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>{briefing.greeting}</h2>
+              <p style={{ color: S.muted, marginBottom: 32 }}>오늘 AI비서가 정리한 일정과 루틴입니다.</p>
+              
+              <div style={{ display: "grid", gridTemplateColumns: isMob ? "1fr" : "1fr 1fr", gap: 20 }}>
+                <div className="card">
+                  <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>⏰ 데일리 루틴</h3>
+                  {briefing.routines.map(r => (
+                    <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${S.line}` }}>
+                      <input type="checkbox" checked={r.is_checked} onChange={() => api.briefing.check(r.id).then(refresh)} style={{ width: 18, height: 18 }} />
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>{r.time}</span>
+                      <span style={{ fontSize: 14, opacity: r.is_checked ? 0.4 : 1, textDecoration: r.is_checked ? "line-through" : "none" }}>{r.task}</span>
+                    </div>
+                  ))}
+                  {briefing.routines.length === 0 && <p style={{ fontSize: 13, color: S.muted }}>등록된 루틴이 없습니다.</p>}
                 </div>
-              )}
+                <div className="card">
+                  <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>📅 주요 일정</h3>
+                  {briefing.schedules.map((s, i) => (
+                    <div key={i} style={{ padding: "10px 0", borderBottom: `1px solid ${S.line}` }}>
+                      <span style={{ fontSize: 12, color: S.accent, fontWeight: 800, marginRight: 8 }}>{s.data.date}</span>
+                      <span style={{ fontSize: 14 }}>{s.data.task}</span>
+                    </div>
+                  ))}
+                  {briefing.schedules.length === 0 && <p style={{ fontSize: 13, color: S.muted }}>확인된 일정이 없습니다.</p>}
+                </div>
+                <div className="card" style={{ gridColumn: isMob ? "auto" : "span 2" }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>💊 건강 리마인더</h3>
+                  <div style={{ display: "flex", gap: 12, overflowX: "auto" }}>
+                    {briefing.health_tips.map(m => (
+                      <div key={m.id} onClick={() => { setSel(m); setEt(m.title); setEc(m.content); setView("memos"); }} style={{ minWidth: 200, padding: 16, borderRadius: 12, background: "rgba(5, 150, 105, 0.05)", border: "1px solid rgba(5, 150, 105, 0.1)", cursor: "pointer" }}>
+                        <div style={{ fontWeight: 800, fontSize: 14 }}>{m.title || "건강 메모"}</div>
+                        <div style={{ fontSize: 12, color: "#065f46", marginTop: 4 }}>{m.preview}</div>
+                      </div>
+                    ))}
+                    {briefing.health_tips.length === 0 && <p style={{ fontSize: 13, color: S.muted }}>건강 관련 메모가 없습니다.</p>}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Editor Component (Full screen on mobile when active) */}
-          {(sel || conEdit || !isMob) && (
-            <div className={`note-editor ${isMob && (sel || conEdit) ? "mobile-active" : ""}`} style={{ flex: 1, display: (isMob && !sel && !conEdit) ? "none" : "flex", flexDirection: "column", background: "#fff", zIndex: 100 }}>
-              {(sel || conEdit) ? (
-                <>
-                  <div style={{ height: 60, borderBottom: `1px solid ${S.line}`, display: "flex", alignItems: "center", padding: "0 16px", gap: 12, background: isMob ? "#f9fafb" : "#fff" }}>
-                    {isMob && <button onClick={() => { setSel(null); setConEdit(null); }} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", marginRight: 4 }}>←</button>}
-                    <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목을 입력하세요" style={{ flex: 1, border: "none", fontSize: 18, fontWeight: 700, background: "none", outline: "none" }} />
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <B small danger onClick={deleteMemo} style={{ background: "#fee2e2", color: "#dc2626" }}>삭제</B>
-                      <B primary small onClick={saveMemo}>{sending ? "저장중" : "저장"}</B>
+          {/* View: LifeCards */}
+          {view === "lifecards" && lifeCards && (
+            <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+              <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 32 }}>라이프카드</h2>
+              <div style={{ display: "grid", gridTemplateColumns: isMob ? "1fr" : "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
+                {lifeCards.cards.map(c => (
+                  <div key={c.category} className="card" style={{ borderTop: `4px solid ${CATEGORY_MAP[c.category].color}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                      <span style={{ fontSize: 18 }}>{CATEGORY_MAP[c.category].icon}</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: S.muted }}>{c.count}건</span>
+                    </div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>{CATEGORY_MAP[c.category].label}</h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {c.recent.map(m => (
+                        <div key={m.id} onClick={() => { setSel(m); setEt(m.title); setEc(m.content); setView("memos"); }} style={{ fontSize: 13, color: S.muted, padding: "8px", borderRadius: 8, background: S.cream, cursor: "pointer" }}>{m.title || "제목 없음"}</div>
+                      ))}
                     </div>
                   </div>
-                  <textarea value={ec} onChange={e => setEc(e.target.value)} placeholder="내용을 입력하세요..." style={{ flex: 1, border: "none", padding: 24, fontSize: 16, lineHeight: 1.7, outline: "none", resize: "none" }} />
-                </>
-              ) : (
-                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: S.muted, flexDirection: "column" }}>
-                  <Logo size={48} />
-                  <p style={{ marginTop: 16 }}>기록을 시작해보세요.</p>
+                ))}
+                
+                {/* Special Card: Finance */}
+                {lifeCards.extracted.finance.length > 0 && (
+                  <div className="card" style={{ background: S.ink, color: "#fff" }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>🏦 재정 요약</h3>
+                    {lifeCards.extracted.finance.map((f, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                        <span style={{ fontSize: 14 }}>{f.data.item}</span>
+                        <span style={{ fontSize: 14, fontWeight: 800 }}>{f.data.amount}원</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* View: Memos */}
+          {view === "memos" && (
+            <div style={{ display: "flex", flex: 1, gap: 24, height: "100%" }}>
+              <div style={{ width: isMob ? "100%" : 320, display: "flex", flexDirection: "column" }}>
+                <div style={{ marginBottom: 16 }}>
+                  <input value={q} onChange={e => setQ(e.target.value)} placeholder="메모 검색..." style={{ width: "100%", padding: 12, borderRadius: 12, border: `1px solid ${S.line}`, background: "#fff" }} />
+                </div>
+                <div style={{ flex: 1, overflowY: "auto" }}>
+                  {memos.map(m => (
+                    <div key={m.id} onClick={() => { setSel(m); setEt(m.title); setEc(m.content); }} className="card" style={{ marginBottom: 12, cursor: "pointer", background: sel?.id === m.id ? "rgba(79,70,229,0.05)" : "#fff", border: sel?.id === m.id ? `1px solid ${S.accent}` : `1px solid ${S.line}` }}>
+                      <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 6 }}>{m.title || "제목 없음"}</div>
+                      <p style={{ fontSize: 12, color: S.muted, marginBottom: 8, lineHeight: 1.4 }}>{m.preview}</p>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {m.categories.map(c => <span key={c} style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: CATEGORY_MAP[c]?.color + "20", color: CATEGORY_MAP[c]?.color, fontWeight: 800 }}>{CATEGORY_MAP[c]?.label}</span>)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Desktop Editor Side Panel */}
+              {!isMob && (
+                <div style={{ flex: 1, display: "flex", gap: 20 }}>
+                  <div className="card" style={{ flex: 2, display: "flex", flexDirection: "column", padding: 32 }}>
+                    {sel ? (
+                      <>
+                        <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목을 입력하세요" style={{ fontSize: 24, fontWeight: 800, border: "none", marginBottom: 24, padding: 0 }} />
+                        <textarea value={ec} onChange={e => setEc(e.target.value)} placeholder="메모 내용을 입력하세요. 자동으로 분석됩니다." style={{ flex: 1, border: "none", resize: "none", fontSize: 16, lineHeight: 1.8, padding: 0 }} />
+                        <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end", gap: 12 }}>
+                          <B onClick={() => setSel(null)}>닫기</B>
+                          <B primary onClick={saveMemo}>{sending ? "저장 중..." : "AI 저장 및 분석"}</B>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: S.muted }}>비서에게 맡길 메모를 선택하세요.</div>
+                    )}
+                  </div>
+                  
+                  {/* AI Side Panel */}
+                  <div style={{ flex: 1, minWidth: 260 }}>
+                    <div className="card" style={{ height: "100%", background: S.paper }}>
+                      <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 20, color: S.accent }}>✨ AI 분석 결과</h3>
+                      {sel?.id !== "new" && sel ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                          <div>
+                            <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 8 }}>감지된 카테고리</p>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {sel.categories?.map(c => <span key={c} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 8, background: CATEGORY_MAP[c]?.color, color: "#fff", fontWeight: 700 }}>{CATEGORY_MAP[c]?.label}</span>)}
+                            </div>
+                          </div>
+                          {sel.routines?.length > 0 && (
+                            <div>
+                              <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 8 }}>추출된 루틴</p>
+                              {sel.routines.map((r, i) => <div key={i} style={{ fontSize: 13, padding: "8px", background: S.cream, borderRadius: 8, marginBottom: 4 }}>🕒 {r.time} - {r.task}</div>)}
+                            </div>
+                          )}
+                          {sel.extracted_infos?.length > 0 && (
+                            <div>
+                              <p style={{ fontSize: 11, color: S.muted, fontWeight: 800, marginBottom: 8 }}>추출된 정형 데이터</p>
+                              {sel.extracted_infos.map((info, i) => (
+                                <div key={i} style={{ fontSize: 13, padding: "8px", background: S.cream, borderRadius: 8, marginBottom: 4 }}>
+                                  <b>[{CATEGORY_MAP[info.info_type]?.label || info.info_type}]</b> {Object.entries(info.data).map(([k, v]) => `${v}`).join(" | ")}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {sel.extracted_infos?.length === 0 && !sel.routines?.length && <p style={{ fontSize: 12, color: S.muted }}>메모를 저장하여 정보를 추출해보세요.</p>}
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: 12, color: S.muted }}>메모를 선택하면 분석 결과가 여기에 표시됩니다.</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Mobile Bottom Navigation */}
-        {isMob && !sel && !conEdit && (
-          <div style={{ height: 64, display: "flex", borderTop: `1px solid ${S.line}`, background: "#fff", zIndex: 10 }}>
-            {[["memos", "📝", "메모"], ["contacts", "👥", "주소록"]].map(([v, i, l]) => (
+        {/* Mobile Full Screen Editor Overlay */}
+        {isMob && sel && (
+          <div className="note-editor mobile-active" style={{ display: "flex", flexDirection: "column", background: "#fff" }}>
+            <div style={{ height: 60, display: "flex", alignItems: "center", padding: "0 16px", borderBottom: `1px solid ${S.line}` }}>
+              <button onClick={() => setSel(null)} style={{ background: "none", border: "none", fontSize: 24, marginRight: 12 }}>←</button>
+              <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목" style={{ flex: 1, border: "none", fontSize: 18, fontWeight: 800 }} />
+              <B primary small onClick={saveMemo}>{sending ? "..." : "저장"}</B>
+            </div>
+            <textarea value={ec} onChange={e => setEc(e.target.value)} placeholder="내용을 입력하세요..." style={{ flex: 1, border: "none", padding: 20, fontSize: 16, lineHeight: 1.7, resize: "none" }} />
+            
+            {/* Mobile AI Panel (Bottom Drawer Style) */}
+            <div style={{ padding: 20, borderTop: `1px solid ${S.line}`, background: "#f8fafc" }}>
+              <p style={{ fontSize: 12, fontWeight: 800, color: S.accent, marginBottom: 10 }}>✨ AI 분석 결과</p>
+              <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
+                {sel.categories?.map(c => <span key={c} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: CATEGORY_MAP[c]?.color, color: "#fff", fontWeight: 700, whiteSpace: "nowrap" }}>{CATEGORY_MAP[c]?.label}</span>)}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Bottom Tab Bar */}
+        {isMob && (
+          <div style={{ height: 64, display: "flex", borderTop: `1px solid ${S.line}`, background: "#fff" }}>
+            {[["briefing", "🏠", "브리핑"], ["lifecards", "💳", "라이프"], ["memos", "📄", "메모"]].map(([v, i, l]) => (
               <button key={v} onClick={() => setView(v)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "none", border: "none", gap: 2, color: view === v ? S.accent : S.muted }}>
-                <span style={{ fontSize: 20 }}>{i}</span>
-                <span style={{ fontSize: 10, fontWeight: 700 }}>{l}</span>
+                <span style={{ fontSize: 18 }}>{i}</span>
+                <span style={{ fontSize: 10, fontWeight: 800 }}>{l}</span>
               </button>
             ))}
           </div>
         )}
-      </div>
 
-      {notif && (
-        <div style={{ position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)", background: notif.t === "err" ? "#ef4444" : S.ink, color: "#fff", padding: "12px 24px", borderRadius: 12, boxShadow: "0 10px 40px rgba(0,0,0,0.2)", zIndex: 10000, fontWeight: 600, animation: "up .3s ease" }}>{notif.m}</div>
-      )}
+      </div>
+      {notif && <div style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", background: S.ink, color: "#fff", padding: "16px 32px", borderRadius: 50, zIndex: 10000, fontWeight: 700, animation: "up .3s ease", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}>{notif.m}</div>}
     </div>
   );
 }

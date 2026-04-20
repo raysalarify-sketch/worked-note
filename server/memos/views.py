@@ -1,23 +1,82 @@
+import re
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.db.models import Q
-from .models import Memo, Contact
-from .serializers import MemoSerializer, MemoListSerializer, ContactSerializer
+from django.utils import timezone
+from .models import Memo, Contact, RoutineAlert, ExtractedInfo, DailyCheck
+from .serializers import (
+    MemoSerializer, MemoListSerializer, ContactSerializer, 
+    RoutineAlertSerializer, ExtractedInfoSerializer
+)
+
+class AIAnalyzer:
+    """메모 본문을 분석하여 카테고리 분류 및 정보 추출을 수행하는 엔진"""
+    
+    CATEGORIES = {
+        'routine': ['매일', '매주', '아침마다', '저녁마다', '루틴', '습관', '반복'],
+        'health': ['약', '병원', '진료', '운동', '비타민', '영양제', '혈압', '체중'],
+        'schedule': ['회의', '미팅', '약속', '마감', '발표', '면접', '시', '분'],
+        'person': ['님', '씨', '팀장', '대표', '전화', '이메일'],
+        'finance': ['원', '만원', '결제', '입금', '급여', '보험', '카드', '이체'],
+        'work': ['프로젝트', '업무', '보고', '개발', '배포', 'API', '이슈'],
+    }
+
+    @staticmethod
+    def classify(content):
+        tags = []
+        for cat, keywords in AIAnalyzer.CATEGORIES.items():
+            if any(kw in content for kw in keywords):
+                tags.append(cat)
+        return tags if tags else ['idea']
+
+    @staticmethod
+    def extract_all(user, memo):
+        content = memo.content
+        # 1. 루틴 추출
+        routine_patterns = [
+            (r'매일 아침\s+(.+)', '08:00'),
+            (r'매일 저녁\s+(.+)', '20:00'),
+            (r'점심 후\s+(.+)', '13:00'),
+            (r'자기 전\s+(.+)', '22:00'),
+            (r'(\d{1,2})시\s+(.+)', None), # 시간 직접 언급
+        ]
+        RoutineAlert.objects.filter(memo=memo).delete()
+        for pattern, default_time in routine_patterns:
+            matches = re.finditer(pattern, content)
+            for m in matches:
+                task = m.group(1 if default_time else 2)
+                time = default_time or f"{m.group(1).zfill(2)}:00"
+                RoutineAlert.objects.create(user=user, memo=memo, task=task.strip(), time=time)
+
+        # 2. 일정 추출 (간단)
+        ExtractedInfo.objects.filter(memo=memo).delete()
+        date_pattern = r'(\d{1,2}/\d{1,2})\s+(.+)'
+        for m in re.finditer(date_pattern, content):
+            ExtractedInfo.objects.create(
+                user=user, memo=memo, info_type='schedule',
+                data={'date': m.group(1), 'task': m.group(2).strip()}
+            )
+
+        # 3. 연락처 추출
+        phone_pattern = r'([가-힣]{2,4})\s+(010-\d{4}-\d{4})'
+        for m in re.finditer(phone_pattern, content):
+            ExtractedInfo.objects.create(
+                user=user, memo=memo, info_type='person',
+                data={'name': m.group(1), 'phone': m.group(2)}
+            )
+
+        # 4. 재정 추출
+        money_pattern = r'(.+)\s+(\d+)(?:만원|원)'
+        for m in re.finditer(money_pattern, content):
+            ExtractedInfo.objects.create(
+                user=user, memo=memo, info_type='finance',
+                data={'item': m.group(1).strip(), 'amount': m.group(2)}
+            )
 
 
 class MemoViewSet(viewsets.ModelViewSet):
-    """
-    메모 CRUD + 검색 + AI 분석
-    
-    GET    /api/memos/          → 목록
-    POST   /api/memos/          → 생성
-    GET    /api/memos/{id}/     → 상세
-    PUT    /api/memos/{id}/     → 수정
-    DELETE /api/memos/{id}/     → 삭제
-    GET    /api/memos/search/?q=키워드  → AI 검색
-    GET    /api/memos/stats/    → 통계
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
@@ -26,109 +85,96 @@ class MemoViewSet(viewsets.ModelViewSet):
         return MemoSerializer
 
     def get_queryset(self):
-        return Memo.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    @action(detail=False, methods=['get'])
-    def search(self, request):
-        """AI 검색 — 제목 + 본문 통합 검색"""
-        query = request.query_params.get('q', '').strip()
-        if not query:
-            return Response([])
-
-        # 키워드 분리 후 OR 검색
-        keywords = query.split()
-        q_filter = Q()
-        for kw in keywords:
-            q_filter |= Q(title__icontains=kw) | Q(content__icontains=kw)
-
-        memos = self.get_queryset().filter(q_filter).distinct()
-        serializer = MemoListSerializer(memos, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def stats(self, request):
-        """메모 통계"""
-        from django.utils import timezone
-        today = timezone.now().date()
-        qs = self.get_queryset()
-        return Response({
-            'total': qs.count(),
-            'today': qs.filter(created_at__date=today).count(),
-            'pinned': qs.filter(pinned=True).count(),
-            'by_color': {
-                str(i): qs.filter(color=i).count()
-                for i in range(5)
-            }
-        })
-
-    @action(detail=True, methods=['post'])
-    def toggle_share(self, request, pk=None):
-        memo = self.get_object()
-        memo.is_shared = not memo.is_shared
-        memo.save()
-        return Response({'is_shared': memo.is_shared, 'share_token': memo.share_token})
-
-
-class ContactViewSet(viewsets.ModelViewSet):
-    """
-    연락처 CRUD
-    
-    GET    /api/contacts/              → 목록
-    POST   /api/contacts/              → 생성
-    PUT    /api/contacts/{id}/         → 수정
-    DELETE /api/contacts/{id}/         → 삭제
-    GET    /api/contacts/by_group/     → 그룹별 조회
-    """
-    serializer_class = ContactSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        qs = Contact.objects.filter(user=self.request.user)
-        # 검색
-        search = self.request.query_params.get('search', '')
-        if search:
-            qs = qs.filter(
-                Q(name__icontains=search) |
-                Q(email__icontains=search) |
-                Q(phone__icontains=search)
-            )
-        # 그룹 필터
-        group = self.request.query_params.get('group', '')
-        if group:
-            qs = qs.filter(group=group)
+        qs = Memo.objects.filter(user=self.request.user)
+        category = self.request.query_params.get('category')
+        if category:
+            qs = qs.filter(categories__contains=category)
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        memo = serializer.save(user=self.request.user)
+        self._analyze(memo)
+
+    def perform_update(self, serializer):
+        memo = serializer.save()
+        self._analyze(memo)
+
+    def _analyze(self, memo):
+        memo.categories = AIAnalyzer.classify(memo.content)
+        memo.save()
+        AIAnalyzer.extract_all(self.request.user, memo)
 
     @action(detail=False, methods=['get'])
-    def by_group(self, request):
-        """그룹별 연락처"""
-        groups = {}
-        for contact in self.get_queryset():
-            if contact.group not in groups:
-                groups[contact.group] = []
-            groups[contact.group].append(ContactSerializer(contact).data)
-        return Response(groups)
+    def search(self, request):
+        query = request.query_params.get('q', '').strip()
+        if not query: return Response([])
+        qs = self.get_queryset().filter(Q(title__icontains=query) | Q(content__icontains=query))
+        return Response(MemoListSerializer(qs, many=True).data)
 
 
-from rest_framework.views import APIView
-class SharedMemoView(APIView):
-    """외부 공유용 메모 조회 (로그인 불필요)"""
-    permission_classes = [permissions.AllowAny]
+class BriefingView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, token):
-        try:
-            memo = Memo.objects.get(share_token=token, is_shared=True)
-            return Response({
-                'title': memo.title,
-                'content': memo.content,
-                'color': memo.color,
-                'updated_at': memo.updated_at,
-                'user_name': memo.user.first_name
-            })
-        except Memo.DoesNotExist:
-            return Response({'error': 'Memo not found or not shared'}, status=status.HTTP_404_NOT_FOUND)
+    def get(self, request):
+        user = request.user
+        now = timezone.now()
+        hour = now.hour
+        
+        if hour < 6: greet = "고요한 새벽이네요"
+        elif hour < 12: greet = "기분 좋은 아침입니다"
+        elif hour < 18: greet = "활기찬 오후 보내고 계신가요?"
+        else: greet = "오늘 하루도 수고 많으셨어요"
+
+        routines = RoutineAlert.objects.filter(user=user, is_active=True).order_by('time')
+        schedules = ExtractedInfo.objects.filter(user=user, info_type='schedule').order_by('-created_at')[:5]
+        health_memos = Memo.objects.filter(user=user, categories__contains='health')[:3]
+
+        return Response({
+            'greeting': f"{greet}, {user.first_name or user.username}님!",
+            'routines': RoutineAlertSerializer(routines, many=True).data,
+            'schedules': ExtractedInfoSerializer(schedules, many=True).data,
+            'health_tips': MemoListSerializer(health_memos, many=True).data
+        })
+
+    @action(detail=False, methods=['post'])
+    def check_routine(self, request, pk=None):
+        routine = RoutineAlert.objects.get(pk=pk, user=request.user)
+        DailyCheck.objects.get_or_create(user=request.user, routine=routine, checked_at=timezone.now().date())
+        return Response({'status': 'checked'})
+
+
+class LifeCardView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        memos = Memo.objects.filter(user=user)
+        
+        cards = []
+        for cat in AIAnalyzer.CATEGORIES.keys():
+            cat_memos = memos.filter(categories__contains=cat)
+            if cat_memos.exists():
+                cards.append({
+                    'category': cat,
+                    'count': cat_memos.count(),
+                    'recent': MemoListSerializer(cat_memos[:3], many=True).data
+                })
+        
+        # 특수 카드: 연락처 및 재정 요약
+        people = ExtractedInfo.objects.filter(user=user, info_type='person')[:5]
+        finance = ExtractedInfo.objects.filter(user=user, info_type='finance')[:5]
+        
+        return Response({
+            'cards': cards,
+            'extracted': {
+                'people': ExtractedInfoSerializer(people, many=True).data,
+                'finance': ExtractedInfoSerializer(finance, many=True).data
+            }
+        })
+
+
+class ContactViewSet(viewsets.ModelViewSet):
+    serializer_class = ContactSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    def get_queryset(self): return Contact.objects.filter(user=self.request.user)
+    def perform_create(self, serializer): serializer.save(user=self.request.user)
