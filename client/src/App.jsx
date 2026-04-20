@@ -342,10 +342,11 @@ export default function App() {
     setSending(true);
     try {
       await api.auth.requestPasswordReset(resetEmail);
-      flash("초기화 정보를 이메일로 보냈습니다. 메일함을 확인해주세요!");
+      flash("인증 메일이 성공적으로 발송되었습니다!");
       setPg("login");
     } catch(e){ 
-      flash("유저를 찾을 수 없거나 서버 오류가 발생했습니다.","err"); 
+      const msg = e.response?.data?.message || "현재 등록된 계정이 없습니다.";
+      flash(msg, "err"); 
     } finally {
       setSending(false);
     }

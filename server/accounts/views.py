@@ -192,7 +192,7 @@ class PasswordResetRequestView(APIView):
 
             return Response({'message': '이메일이 발송되었습니다. 가입하신 이메일의 편함함을 확인해주세요.'}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
-            return Response({'message': '해당 이메일로 가입된 사용자가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': '현재 등록된 계정이 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class PasswordResetConfirmView(APIView):
