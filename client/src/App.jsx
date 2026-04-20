@@ -44,18 +44,31 @@ const CHANNELS = [
 const GROUPS = ["회사", "개인", "팀원", "거래처", "일반", "VIP"];
 
 const Logo = ({ size = 28, dark = false }) => (
-  <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-    <rect x="4" y="2" width="26" height="34" rx="2" fill={dark ? "#e8e2d6" : "#5c554a"} opacity="0.15"/>
-    <rect x="8" y="5" width="26" height="34" rx="2" fill={dark ? "#faf6ee" : "#fff"} stroke={dark ? "#bfb8a8" : "#8a8279"} strokeWidth="1.5"/>
-    <line x1="14" y1="14" x2="28" y2="14" stroke={dark ? "#c4bda8" : "#c9c2b5"} strokeWidth="1"/>
-    <line x1="14" y1="19" x2="28" y2="19" stroke={dark ? "#c4bda8" : "#c9c2b5"} strokeWidth="1"/>
-    <line x1="14" y1="24" x2="24" y2="24" stroke={dark ? "#c4bda8" : "#c9c2b5"} strokeWidth="1"/>
-    <path d="M30 30L36 15L38 16L32 31Z" fill={dark ? "#d4a04a" : "#b8860b"}/>
-    <path d="M30 30L29 33L32 31Z" fill={dark ? "#7a7265" : "#5c554a"}/>
-    <circle cx="12" cy="14" r="1.2" fill={dark ? "#8a8475" : "#a39b8e"}/>
-    <circle cx="12" cy="19" r="1.2" fill={dark ? "#8a8475" : "#a39b8e"}/>
-    <circle cx="12" cy="24" r="1.2" fill={dark ? "#8a8475" : "#a39b8e"}/>
-  </svg>
+  <div style={{ position: "relative", width: size * 1.5, height: size * 1.5, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    {/* Background Glow */}
+    <div style={{ position: "absolute", width: "100%", height: "100%", background: "radial-gradient(circle, rgba(79, 70, 229, 0.2) 0%, rgba(255,255,255,0) 70%)", borderRadius: "50%", filter: "blur(8px)" }}></div>
+    
+    <svg width={size} height={size * 1.2} viewBox="0 0 40 48" fill="none" style={{ filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.1))", zIndex: 2 }}>
+      {/* 3D Glass Surface */}
+      <rect x="2" y="4" width="32" height="40" rx="6" fill="rgba(255, 255, 255, 0.8)" stroke="#4f46e5" strokeWidth="0.5" />
+      <rect x="2" y="4" width="32" height="40" rx="6" fill="linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)" />
+      
+      {/* Paper Lines */}
+      <line x1="10" y1="14" x2="26" y2="14" stroke="#e5e7eb" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="10" y1="20" x2="26" y2="20" stroke="#e5e7eb" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="10" y1="26" x2="20" y2="26" stroke="#e5e7eb" strokeWidth="1.5" strokeLinecap="round" />
+      
+      {/* Decorative Accent (Pen or Highlight) */}
+      <rect x="30" y="10" width="4" height="24" rx="2" fill="url(#grad_accent)" transform="rotate(15 30 10)" />
+      
+      <defs>
+        <linearGradient id="grad_accent" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#4f46e5" />
+          <stop offset="100%" stopColor="#0ea5e9" />
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
 );
 
 const css = `
@@ -133,7 +146,7 @@ export default function App() {
   const [sending, setSending] = useState(false);
   const [pwForm, setPwForm] = useState({ old: "", new1: "", new2: "" });
   const [pwOpen, setPwOpen] = useState(false);
-  const [wsName, setWsName] = useState(localStorage.getItem("wn-wsname") || "워크드 노트");
+  const [wsName, setWsName] = useState(localStorage.getItem("wn-wsname") || "나의 노트");
   const [editWs, setEditWs] = useState(false);
   const [rotIdx, setRotIdx] = useState(0);
   const ROT_WORDS = ["기획", "개발", "디자인", "영업", "마케팅", "개인", "프리랜서"];
@@ -382,11 +395,11 @@ export default function App() {
       <style>{css}</style>
       <div style={{animation:"up .8s cubic-bezier(0.16, 1, 0.3, 1)",width:"100%",maxWidth:400}}>
         <div style={{textAlign:"center",marginBottom:44}}>
-          <Logo size={52}/>
-          <h1 style={{fontFamily:S.title,fontSize:32,color:S.ink,marginTop:16,letterSpacing:-1,fontWeight:700}}>
-            워크드 (<span style={{background:"linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",display:"inline-block",minWidth:76,textAlign:"center",animation:"slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1)"}} key={rotIdx}>{ROT_WORDS[rotIdx]}</span>) 노트
+          <Logo size={64}/>
+          <h1 style={{fontFamily:S.title,fontSize:34,color:S.ink,marginTop:20,letterSpacing:-1.5,fontWeight:800}}>
+            <span style={{background:"linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",display:"inline-block",minWidth:80,textAlign:"center",animation:"slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1)"}} key={rotIdx}>{ROT_WORDS[rotIdx]}</span> 노트
           </h1>
-          <p style={{color:S.muted,fontSize:14,marginTop:8,fontWeight:500,letterSpacing:-0.3}}>나만의 통합 비즈니스 비서</p>
+          <p style={{color:S.muted,fontSize:15,marginTop:10,fontWeight:500,letterSpacing:-0.3}}>나만의 통합 비즈니스 비서</p>
         </div>
         <div style={{background:"rgba(255, 255, 255, 0.8)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderRadius:16,padding:"36px 32px",boxShadow:"0 20px 60px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.03)",border:"1px solid rgba(255,255,255,0.7)"}}>
           <div style={{display:"flex",borderBottom:`1px solid ${S.line}`,marginBottom:28}}>
