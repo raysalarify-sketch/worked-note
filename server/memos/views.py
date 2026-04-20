@@ -103,12 +103,29 @@ class MemoViewSet(viewsets.ModelViewSet):
         memo.save()
         AIAnalyzer.extract_all(memo.user, memo)
 
-    @action(detail=False, methods=['get'])
-    def search(self, request):
-        query = request.query_params.get('q', '').strip()
-        if not query: return Response([])
-        qs = self.get_queryset().filter(Q(title__icontains=query) | Q(content__icontains=query))
-        return Response(MemoListSerializer(qs, many=True).data)
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        password = request.query_params.get('password')
+        
+        # 비밀번호가 걸려있는데 맞지 않는 경우 (심지어 주인이라도 본문을 가림)
+        if instance.password and password != instance.password:
+            data = self.get_serializer(instance).data
+            data['content'] = "🔒 이 메모는 비밀번호로 잠겨 있습니다."
+            data['extracted_infos'] = []
+            data['routines'] = []
+            data['is_locked'] = True
+            return Response(data)
+        return super().retrieve(request, *args, **kwargs)
+
+    @action(detail=True, methods=['post'])
+    def toggle_lock(self, request, pk=None):
+        memo = self.get_object()
+        if memo.user != request.user:
+            return Response({'error': '권한이 없습니다.'}, status=403)
+        password = request.data.get('password')
+        memo.password = password if password else None # 비밀번호가 없으면 해제
+        memo.save()
+        return Response({'is_locked': bool(memo.password)})
 
     @action(detail=True, methods=['post'])
     def toggle_public(self, request, pk=None):
@@ -145,6 +162,13 @@ class MemoViewSet(viewsets.ModelViewSet):
         collab, created = Collaborator.objects.get_or_create(memo=memo, email=email)
         return Response(CollaboratorSerializer(collab).data)
 
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        query = request.query_params.get('q', '').strip()
+        if not query: return Response([])
+        qs = self.get_queryset().filter(Q(title__icontains=query) | Q(content__icontains=query))
+        return Response(MemoListSerializer(qs, many=True).data)
+
 
 class SharedMemoView(APIView):
     """퍼블릭 공유 페이지 전용 뷰"""
@@ -153,6 +177,16 @@ class SharedMemoView(APIView):
     def get(self, request, slug):
         try:
             memo = Memo.objects.get(share_slug=slug, is_public=True)
+            password = request.query_params.get('password')
+            
+            if memo.password and password != memo.password:
+                data = MemoSerializer(memo, context={'request': request}).data
+                data['content'] = "🔒 이 메모는 비밀번호로 잠겨 있습니다."
+                data['extracted_infos'] = []
+                data['routines'] = []
+                data['is_locked'] = True
+                return Response(data)
+                
             return Response(MemoSerializer(memo, context={'request': request}).data)
         except Memo.DoesNotExist:
             return Response({'error': '존재하지 않거나 비공개된 메모입니다.'}, status=404)

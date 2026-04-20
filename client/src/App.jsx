@@ -79,6 +79,7 @@ export default function App() {
   const [nc, setNc] = useState("");
   const [colbs, setColbs] = useState([]);
   const [ne, setNe] = useState("");
+  const [upw, setUpw] = useState(""); // 잠금 해제용 비밀번호
 
   const flash = (m, t = "ok") => { setNotif({ m, t }); setTimeout(() => setNotif(null), 3000); };
 
@@ -99,9 +100,30 @@ export default function App() {
 
   const loadSharedMemo = async (slug) => {
     try {
-      const res = await api.memos.getShared(slug);
+      const res = await api.memos.getShared(slug, upw);
       setSel(res); setView("shared"); setPg("shared");
     } catch (e) { flash("메모를 불러올 수 없습니다.", "err"); }
+  };
+
+  const attemptUnlock = async () => {
+    try {
+      const res = await api.memos.get(sel.id, upw);
+      setSel(res); setEt(res.title); setEc(res.content);
+      if (res.is_locked && res.content.includes("🔒")) {
+        flash("비밀번호가 올바르지 않습니다.", "err");
+      } else {
+        flash("잠금이 해제되었습니다.");
+      }
+    } catch (e) { flash("해제 중 오류 발생", "err"); }
+  };
+
+  const toggleLock = async () => {
+    const pw = prompt("설정할 비밀번호를 입력하세요 (빈칸이면 해제):");
+    try {
+      const res = await api.memos.toggleLock(sel.id, pw);
+      flash(res.is_locked ? "비밀번호가 설정되었습니다." : "비밀번호가 제거되었습니다.");
+      refresh(); setSel(null);
+    } catch (e) { flash("설정 중 오류 발생", "err"); }
   };
 
   const importMemo = async () => {
@@ -479,6 +501,9 @@ export default function App() {
                     {sel ? (
                       <>
                         <div style={{ position: "absolute", top: 24, right: 32, display: "flex", gap: 10 }}>
+                          <button onClick={toggleLock} style={{ background: sel.is_locked ? S.accent : "none", color: sel.is_locked ? "#fff" : S.ink, border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                             {sel.is_locked ? "🔑 잠금 됨" : "🔓 잠금"}
+                          </button>
                           <button onClick={() => { 
                             api.memos.togglePublic(sel.id).then(res => {
                               flash(res.is_public ? "메모가 공개되었습니다!" : "비공개로 전환되었습니다.");
@@ -494,12 +519,21 @@ export default function App() {
                               flash("공유 링크가 복사되었습니다!");
                             }} style={{ background: "none", border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer" }}>🔗 링크 복사</button>
                           )}
-                          <button onClick={() => { if (Notification.permission === "granted") flash("이 메모에 대한 알람이 활성화되었습니다."); else Notification.requestPermission(); }} style={{ background: "none", border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                            <span>🔔</span> 알람
-                          </button>
                         </div>
-                        <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목을 입력하세요" style={{ fontSize: 24, fontWeight: 800, border: "none", marginBottom: 24, padding: 0, width: "calc(100% - 240px)" }} />
-                        <textarea value={ec} onChange={e => setEc(e.target.value)} placeholder="메모 내용을 입력하세요. 자동으로 분석됩니다." style={{ flex: 1, border: "none", resize: "none", fontSize: 16, lineHeight: 1.8, padding: 0 }} />
+                        <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목을 입력하세요" style={{ fontSize: 24, fontWeight: 800, border: "none", marginBottom: 24, padding: 0, width: "calc(100% - 320px)" }} />
+                        
+                        {(sel.is_locked && ec.includes("🔒")) ? (
+                          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#f8fafc", borderRadius: 20, border: `2px dashed ${S.line}` }}>
+                             <span style={{ fontSize: 40, marginBottom: 16 }}>🔒</span>
+                             <p style={{ fontWeight: 800, color: S.muted, marginBottom: 20 }}>비밀번호로 보호된 메모입니다.</p>
+                             <div style={{ display: "flex", gap: 10 }}>
+                                {I({ type: "password", value: upw, onChange: e => setUpw(e.target.value), placeholder: "비밀번호", style: { width: 180 } })}
+                                <B primary onClick={attemptUnlock}>해제</B>
+                             </div>
+                          </div>
+                        ) : (
+                          <textarea value={ec} onChange={e => setEc(e.target.value)} placeholder="메모 내용을 입력하세요. 자동으로 분석됩니다." style={{ flex: 1, border: "none", resize: "none", fontSize: 16, lineHeight: 1.8, padding: 0 }} />
+                        )}
                         
                         {/* Comment Section in Editor */}
                         <div style={{ marginTop: 24, padding: "20px 0", borderTop: `1px solid ${S.line}` }}>

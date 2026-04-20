@@ -13,6 +13,7 @@ class Memo(models.Model):
     pinned = models.BooleanField(default=False)
     share_slug = models.UUIDField(default=uuid.uuid4, unique=False, null=True, blank=True) # 공유용 고유 아이디
     is_public = models.BooleanField(default=False) # 공개 여부
+    password = models.CharField(max_length=128, blank=True, null=True) # 메모 잠금 비밀번호
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

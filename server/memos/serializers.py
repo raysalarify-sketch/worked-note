@@ -46,15 +46,20 @@ class MemoSerializer(serializers.ModelSerializer):
     routines = RoutineAlertSerializer(many=True, read_only=True)
     comments = MemoCommentSerializer(many=True, read_only=True)
     collaborators = CollaboratorSerializer(many=True, read_only=True)
+    is_locked = serializers.SerializerMethodField()
 
     class Meta:
         model = Memo
         fields = [
             'id', 'title', 'content', 'categories', 'color', 'pinned', 
-            'share_slug', 'is_public', 'extracted_infos', 'routines', 
+            'share_slug', 'is_public', 'password', 'is_locked', 'extracted_infos', 'routines', 
             'comments', 'collaborators', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'share_slug', 'created_at', 'updated_at']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def get_is_locked(self, obj):
+        return bool(obj.password)
 
 
 class MemoListSerializer(serializers.ModelSerializer):
