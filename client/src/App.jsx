@@ -419,14 +419,16 @@ export default function App() {
           )}
           {pg==="reset-confirm"&&(
             <div style={{display:"flex",flexDirection:"column",gap:14,animation:"fadeIn .3s ease"}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:S.ink,margin:"8px 0 4px"}}>비밀번호 재설정</h3>
-              <p style={{fontSize:12,color:S.muted}}>새로운 비밀번호를 입력해주세요.</p>
-              <div style={{background:"#f8fafc",padding:10,borderRadius:8,fontSize:11,color:S.muted,border:`1px solid ${S.line}`}}>
-                식별 코드: {resetForm.uid.substring(0,8)}... / 토큰 확인됨
+              <h3 style={{fontSize:16,fontWeight:700,color:S.ink,margin:"8px 0 4px"}}>🔒 새로운 비밀번호 설정</h3>
+              <p style={{fontSize:12,color:S.muted,lineHeight:1.6}}>보안을 위해 강력한 비밀번호를 입력해주세요.<br/>변경 즉시 새로운 비밀번호로 로그인이 가능합니다.</p>
+              
+              <div style={{marginTop:8}}>
+                <label style={{fontSize:12,color:S.muted,marginBottom:6,display:"block",fontWeight:600}}>새 비밀번호</label>
+                {I({type:"password",value:resetForm.newPw,onChange:e=>setResetForm({...resetForm,newPw:e.target.value}),placeholder:"4자 이상 입력"})}
               </div>
-              <div><label style={{fontSize:12,color:S.muted,marginBottom:4,display:"block"}}>새 비밀번호</label>{I({type:"password",value:resetForm.newPw,onChange:e=>setResetForm({...resetForm,newPw:e.target.value}),placeholder:"4자 이상"})}</div>
-              <B primary onClick={confirmReset} style={{width:"100%"}}>비밀번호 변경 완료</B>
-              <button onClick={()=>setPg("login")} style={{background:"none",border:"none",color:S.muted,fontSize:12,cursor:"pointer",fontFamily:S.font,marginTop:8}}>취소하고 로그인으로</button>
+              
+              <B primary onClick={confirmReset} style={{width:"100%",padding:"14px",marginTop:8,borderRadius:10}}>비밀번호 변경 완료</B>
+              <button onClick={()=>setPg("login")} style={{background:"none",border:"none",color:S.muted,fontSize:12,cursor:"pointer",fontFamily:S.font,marginTop:10}}>취소하고 로그인으로</button>
             </div>
           )}
         </div>

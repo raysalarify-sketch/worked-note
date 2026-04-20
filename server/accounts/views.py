@@ -123,15 +123,45 @@ class PasswordResetRequestView(APIView):
             
             reset_link = f"{domain}/reset-password/{uid}/{token}/"
             
+            # HTML 템플릿 생성
+            html_content = f"""
+            <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; max-width: 540px; margin: 0 auto; padding: 40px 20px; color: #1f2937; background-color: #ffffff; border-radius: 12px; border: 1px solid #f3f4f6;">
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <div style="display: inline-block; padding: 12px; background: #f3f4f6; border-radius: 12px; margin-bottom: 16px;">
+                        <span style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: #4f46e5;">WORKD NOTE</span>
+                    </div>
+                </div>
+                <div style="background-color: #f9fafb; padding: 32px; border-radius: 12px; text-align: center;">
+                    <h2 style="font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 12px 0;">비밀번호 보완 안내</h2>
+                    <p style="font-size: 15px; line-height: 1.6; color: #4b5563; margin: 0 0 24px 0;">
+                        안녕하세요. 워크드 노트를 이용해 주셔서 감사합니다.<br>
+                        계정의 새로운 비밀번호 설정을 위한 요청이 접수되었습니다.<br>
+                        아래 버튼을 클릭하여 안전하게 변경을 완료해 주세요.
+                    </p>
+                    <a href="{reset_link}" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 16px 36px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);">비밀번호 재설정하기</a>
+                </div>
+                <div style="margin-top: 32px; padding: 0 10px;">
+                    <ul style="padding: 0; margin: 0; list-style: none; font-size: 13px; color: #9ca3af; line-height: 1.8;">
+                        <li style="margin-bottom: 4px;">• 본인이 요청하지 않은 경우 이 메일을 안전하게 무시하셔도 됩니다.</li>
+                        <li>• 보안을 위해 해당 링크는 일정 시간이 지나면 링크가 자동으로 만료됩니다.</li>
+                    </ul>
+                </div>
+                <div style="border-top: 1px solid #f3f4f6; margin-top: 32px; padding-top: 24px; text-align: center;">
+                    <p style="font-size: 12px; color: #9ca3af; margin: 0;">&copy; 2026 WORKD NOTE Team. All rights reserved.</p>
+                </div>
+            </div>
+            """
+            
             try:
                 send_mail(
-                    '워크드 노트 비밀번호 초기화',
+                    '[워크드 노트] 비밀번호 재설정 확인 메일입니다.',
                     f'비밀번호를 초기화하려면 아래 링크를 클릭하세요:\n\n{reset_link}',
                     settings.DEFAULT_FROM_EMAIL,
                     [email],
                     fail_silently=False,
+                    html_message=html_content
                 )
-                print(f"DEBUG: Email successfully sent to {email} via {settings.EMAIL_HOST}")
+                print(f"DEBUG: Premium HTML Email successfully sent to {email}")
             except Exception as e:
                 print(f"CRITICAL ERROR: Failed to send email to {email}. Error: {str(e)}")
                 return Response({'message': '이메일 발송 중 서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
