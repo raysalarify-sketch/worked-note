@@ -277,13 +277,15 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/worked_note_homepage_1776660060862.png?v=2') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{css}</style>
       <div style={{ width: "100%", maxWidth: 420, animation: "up .8s ease" }}>
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <Logo size={70} />
-          <h1 style={{ fontSize: 45, fontWeight: 900, marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <span style={{ color: S.accent }}>({ROT_WORDS[rotIdx]})</span>
-            <span style={{ background: "linear-gradient(to right, #111827, #4b5563)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Note</span>
+        <div style={{ textAlign: "center", marginBottom: 50, position: "relative", zIndex: 2 }}>
+          <div style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}>
+            <Logo size={80} />
+          </div>
+          <h1 style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+            <div style={{ color: S.accent, marginBottom: 8 }}>({ROT_WORDS[rotIdx]})</div>
+            <div style={{ background: "linear-gradient(to right, #111827, #4b5563)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Smart Note</div>
           </h1>
-          <p className="typewriter" style={{ color: S.muted, fontSize: 18, fontWeight: 600, marginTop: 12 }}>당신의 모든 일상을 담는 스마트 비서</p>
+          <p className="typewriter" style={{ color: S.muted, fontSize: 19, fontWeight: 600, marginTop: 24 }}>당신의 모든 일상을 담는 지능형 비서</p>
         </div>
         
         <div className="card" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 32, padding: 32 }}>
