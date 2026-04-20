@@ -46,7 +46,7 @@ class LogoutView(APIView):
             refresh_token = request.data.get('refresh')
             token = RefreshToken(refresh_token)
             token.blacklist()
-            return Response(status=status.HTTP_255_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -87,11 +87,11 @@ class PasswordResetRequestView(APIView):
         from django.utils.encoding import force_bytes
         from django.db.models import Q
 
-        # 입력값 정규화 (공백 제거 및 소문자 변환)
+        # 입력값 정규화
         email_clean = email.lower().strip()
 
         try:
-            # 이메일 필드 또는 사용자명 필드에서 대소문자 구분 없이 검색
+            # 이메일 또는 사용자명으로 검색
             user = User.objects.filter(
                 Q(email__iexact=email_clean) | Q(username__iexact=email_clean)
             ).first()
@@ -102,11 +102,8 @@ class PasswordResetRequestView(APIView):
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
-            # 실제 서비스에서는 여기에 이메일 발송 로직이 들어갑니다.
-            # 이메일 내용에 /reset-password?uid=...&token=... 포함
-            
             return Response({
-                'message': '인증 메일이 발송되었습니다.',
+                'message': '인증 메일 형식이 생성되었습니다.',
                 'uid': uid,
                 'token': token
             })
