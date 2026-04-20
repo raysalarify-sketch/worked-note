@@ -70,6 +70,7 @@ const css = `
 @keyframes down{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes drop{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.98)}to{opacity:1;transform:scale(1)}}
 @keyframes gradientBg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(12px); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
 input:focus,textarea:focus{outline:none}
@@ -391,54 +392,41 @@ export default function App() {
           <div style={{display:"flex",borderBottom:`1px solid ${S.line}`,marginBottom:28}}>
             {[["login","로그인"],["signup","회원가입"]].map(([k,l])=><button key={k} onClick={()=>{setPg(k);setLe("");setSe("");}} style={{flex:1,padding:"10px 0",background:"none",border:"none",borderBottom:pg===k?`2px solid ${S.accent}`:"2px solid transparent",color:pg===k?S.ink:S.muted,fontSize:14,fontWeight:pg===k?600:500,cursor:"pointer",fontFamily:S.font,transition:"all .2s"}}>{l}</button>)}
           </div>
-          {pg==="login"?(
-            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {pg === "login" && (
+            <div style={{display:"flex",flexDirection:"column",gap:14,animation:"fadeIn .3s ease"}}>
               <div><label style={{fontSize:12,color:S.muted,marginBottom:4,display:"block"}}>이메일</label>{I({type:"email",value:lf.email,onChange:e=>setLf({...lf,email:e.target.value}),onKeyDown:e=>e.key==="Enter"&&login(),placeholder:"email@work.com"})}</div>
               <div><label style={{fontSize:12,color:S.muted,marginBottom:4,display:"block"}}>비밀번호</label>{I({type:"password",value:lf.pw,onChange:e=>setLf({...lf,pw:e.target.value}),onKeyDown:e=>e.key==="Enter"&&login(),placeholder:"····"})}</div>
               {le&&<p style={{color:"#a13d2d",fontSize:12}}>{le}</p>}
               <div style={{textAlign:"right"}}><button onClick={()=>setPg("reset-request")} style={{background:"none",border:"none",color:S.accent,fontSize:11,cursor:"pointer",fontFamily:S.font}}>비밀번호를 잊으셨나요?</button></div>
               <B primary onClick={login} style={{marginTop:4,width:"100%",padding:"12px"}}>로그인</B>
             </div>
-          ):(
-            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          )}
+          {pg === "signup" && (
+            <div style={{display:"flex",flexDirection:"column",gap:14,animation:"fadeIn .3s ease"}}>
               {[["이름","name","text","홍길동"],["이메일","email","email","email@work.com"],["비밀번호","pw","password","4자 이상"],["비밀번호 확인","pw2","password",""]].map(([l,k,t,ph])=><div key={k}><label style={{fontSize:12,color:S.muted,marginBottom:4,display:"block"}}>{l}</label>{I({type:t,value:sf[k],onChange:e=>setSf({...sf,[k]:e.target.value}),onKeyDown:e=>k==="pw2"&&e.key==="Enter"&&signup(),placeholder:ph})}</div>)}
               {se&&<p style={{color:"#a13d2d",fontSize:12}}>{se}</p>}
               <B primary onClick={signup} style={{marginTop:4,width:"100%",padding:"12px"}}>가입하기</B>
             </div>
           )}
           {pg==="reset-request"&&(
-            <div style={{display:"flex",flexDirection:"column",gap:14,animation:"up .3s ease"}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:S.ink,marginBottom:4}}>비밀번호 초기화</h3>
+            <div style={{display:"flex",flexDirection:"column",gap:14,animation:"fadeIn .3s ease"}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:S.ink,margin:"8px 0 4px"}}>비밀번호 초기화</h3>
               <p style={{fontSize:12,color:S.muted,lineHeight:1.5}}>가입하신 이메일을 입력하시면 비밀번호를 초기화할 수 있는 정보를 보내드립니다.</p>
               <div><label style={{fontSize:12,color:S.muted,marginBottom:4,display:"block"}}>이메일</label>{I({type:"email",value:resetEmail,onChange:e=>setResetEmail(e.target.value),placeholder:"email@work.com"})}</div>
-              <B primary onClick={requestReset} disabled={sending}>{sending ? "요청 중..." : "초기화 정보 요청"}</B>
-              <button onClick={()=>setPg("login")} style={{background:"none",border:"none",color:S.muted,fontSize:12,cursor:"pointer",fontFamily:S.font}}>로그인으로 돌아가기</button>
-            </div>
-          )}
-          {pg === "shared" && (
-            <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:S.font,display:"flex",justifyContent:"center",padding:"48px 24px"}}>
-              <style>{css}</style>
-              <div style={{maxWidth:720,width:"100%",background:"#fff",borderRadius:16,boxShadow:"0 12px 48px rgba(0,0,0,.08)",border:"1px solid #e5e7eb",overflow:"hidden",animation:"up .4s ease"}}>
-                <div style={{padding:"24px 32px",borderBottom:"1px solid #e5e7eb",display:"flex",justifyContent:"space-between",alignItems:"center",background:"#f8fafc"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}><Logo size={24}/><span style={{fontWeight:600,color:S.ink,fontSize:14}}>{sharedData?.user_name}님의 메모</span></div>
-                  <p style={{fontSize:12,color:S.muted}}>최근 수정: {fmtDate(sharedData?.updated_at)}</p>
-                </div>
-                <div style={{padding:"40px 32px"}}>
-                  <h1 style={{fontSize:28,fontWeight:700,color:S.ink,letterSpacing:-.5,marginBottom:24}}>{sharedData?.title||"제목 없음"}</h1>
-                  <div style={{fontSize:16,lineHeight:1.8,color:S.ink,whiteSpace:"pre-wrap"}}>{sharedData?.content}</div>
-                </div>
-                <div style={{padding:"24px",background:"#f1f5f9",textAlign:"center",borderTop:"1px solid #e5e7eb"}}><p style={{fontSize:13,color:S.muted}}>워크드 노트에서 쉽고 빠르게 기록하세요. <button onClick={()=>window.location.href="/"} style={{background:"none",border:"none",color:S.accent,fontWeight:600,cursor:"pointer"}}>워크드 노트 시작하기</button></p></div>
-              </div>
+              <B primary onClick={requestReset} disabled={sending} style={{width:"100%"}}>{sending ? "요청 중..." : "초기화 정보 요청"}</B>
+              <button onClick={()=>setPg("login")} style={{background:"none",border:"none",color:S.muted,fontSize:12,cursor:"pointer",fontFamily:S.font,marginTop:8}}>로그인으로 돌아가기</button>
             </div>
           )}
           {pg==="reset-confirm"&&(
-            <div style={{display:"flex",flexDirection:"column",gap:14,animation:"up .3s ease"}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:S.ink,marginBottom:4}}>비밀번호 재설정</h3>
-              <p style={{fontSize:12,color:S.muted}}>이메일로 받은 정보를 입력해주세요.</p>
-              <div><label style={{fontSize:11,color:S.muted,marginBottom:3,display:"block"}}>UID</label>{I({value:resetForm.uid,onChange:e=>setResetForm({...resetForm,uid:e.target.value})})}</div>
-              <div><label style={{fontSize:11,color:S.muted,marginBottom:3,display:"block"}}>토큰</label>{I({value:resetForm.token,onChange:e=>setResetForm({...resetForm,token:e.target.value})})}</div>
-              <div><label style={{fontSize:11,color:S.muted,marginBottom:3,display:"block"}}>새 비밀번호</label>{I({type:"password",value:resetForm.newPw,onChange:e=>setResetForm({...resetForm,newPw:e.target.value})})}</div>
-              <B primary onClick={confirmReset}>비밀번호 변경</B>
+            <div style={{display:"flex",flexDirection:"column",gap:14,animation:"fadeIn .3s ease"}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:S.ink,margin:"8px 0 4px"}}>비밀번호 재설정</h3>
+              <p style={{fontSize:12,color:S.muted}}>새로운 비밀번호를 입력해주세요.</p>
+              <div style={{background:"#f8fafc",padding:10,borderRadius:8,fontSize:11,color:S.muted,border:`1px solid ${S.line}`}}>
+                식별 코드: {resetForm.uid.substring(0,8)}... / 토큰 확인됨
+              </div>
+              <div><label style={{fontSize:12,color:S.muted,marginBottom:4,display:"block"}}>새 비밀번호</label>{I({type:"password",value:resetForm.newPw,onChange:e=>setResetForm({...resetForm,newPw:e.target.value}),placeholder:"4자 이상"})}</div>
+              <B primary onClick={confirmReset} style={{width:"100%"}}>비밀번호 변경 완료</B>
+              <button onClick={()=>setPg("login")} style={{background:"none",border:"none",color:S.muted,fontSize:12,cursor:"pointer",fontFamily:S.font,marginTop:8}}>취소하고 로그인으로</button>
             </div>
           )}
         </div>
