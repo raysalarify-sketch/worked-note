@@ -61,12 +61,26 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # 데이터베이스: Render PostgreSQL (DATABASE_URL 환경변수) 또는 로컬 SQLite
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600,
-    )
-}
+# 배포 환경에서는 DATABASE_URL이 반드시 필요합니다.
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+    print("DATABASE INFO: Using EXTERNAL database (PostgreSQL)")
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    print("DATABASE INFO: Using INTERNAL database (SQLite) - DATA WILL BE LOST ON DEPLOY")
 
 AUTH_PASSWORD_VALIDATORS = [
     {
