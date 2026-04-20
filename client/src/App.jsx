@@ -274,18 +274,18 @@ export default function App() {
   );
 
   if (pg !== "app") return (
-    <div style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/worked_note_homepage_1776660060862.png?v=2') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div id="worked-note-app-landing" style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/worked_note_homepage_1776660060862.png?v=2') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: isMob ? "center" : "flex-start", padding: isMob ? 20 : "0 120px" }}>
       <style>{css}</style>
       <div style={{ width: "100%", maxWidth: 420, animation: "up .8s ease" }}>
-        <div style={{ textAlign: "center", marginBottom: 50, position: "relative", zIndex: 2 }}>
-          <div style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}>
+        <div style={{ textAlign: "left", marginBottom: 50, position: "relative", zIndex: 2 }}>
+          <div style={{ marginBottom: 24 }}>
             <Logo size={80} />
           </div>
-          <h1 style={{ fontSize: 52, fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-            <div style={{ color: S.accent, marginBottom: 12 }}>({ROT_WORDS[rotIdx]})</div>
-            <div style={{ background: "linear-gradient(to right, #4f46e5, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>WORKED Smart Note</div>
+          <h1 style={{ fontSize: 56, fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ color: S.accent }}>({ROT_WORDS[rotIdx]})</span>
+            <span style={{ background: "linear-gradient(to right, #111827, #4b5563)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Note</span>
           </h1>
-          <p className="typewriter" style={{ color: "#7c3aed", fontSize: 20, fontWeight: 700, marginTop: 28 }}>생각을 기록하고, AI가 분석하는 스마트 일상</p>
+          <p className="typewriter" style={{ color: S.muted, fontSize: 18, fontWeight: 600, marginTop: 16 }}>당신의 모든 일상을 담는 스마트 비서</p>
         </div>
         
         <div className="card" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 32, padding: 32 }}>
