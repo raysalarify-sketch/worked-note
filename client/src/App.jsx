@@ -185,7 +185,7 @@ export default function App() {
 
           {pg === "signup" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-              {I({ value: sf.name, onChange: e => setSf({ ...sf, name: e.target.value }), placeholder: "전함" })}
+              {I({ value: sf.name, onChange: e => setSf({ ...sf, name: e.target.value }), placeholder: "성명" })}
               {I({ type: "email", value: sf.email, onChange: e => setSf({ ...sf, email: e.target.value }), placeholder: "이메일 계정" })}
               <div style={{ position: "relative" }}>
                 {I({ type: "password", value: sf.password, onChange: e => setSf({ ...sf, password: e.target.value }), placeholder: "비밀번호" })}
