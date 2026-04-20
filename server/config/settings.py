@@ -118,10 +118,11 @@ NHN_SMS_SENDER = os.environ.get('NHN_SMS_SENDER', '')
 NHN_EMAIL_APPKEY = os.environ.get('NHN_EMAIL_APPKEY', '')
 NHN_EMAIL_SECRET = os.environ.get('NHN_EMAIL_SECRET', '')
 NHN_EMAIL_SENDER = os.environ.get('NHN_EMAIL_SENDER', '')
+DEFAULT_FROM_EMAIL = NHN_EMAIL_SENDER
 
 # 이메일 백엔드 설정: 개발 환경(DEBUG=True)에서는 콘솔에 출력
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
-    # 프로덕션에서는 실제 SMTP 설정 필요 (현재는 기본값)
-    pass
+    # 프로덕션에서는 NHN Cloud 이메일 API 사용
+    EMAIL_BACKEND = 'config.email_backends.NHNCloudEmailBackend'

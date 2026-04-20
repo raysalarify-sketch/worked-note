@@ -125,11 +125,11 @@ class PasswordResetRequestView(APIView):
             send_mail(
                 '워크드 노트 비밀번호 초기화',
                 f'비밀번호를 초기화하려면 아래 링크를 클릭하세요:\n\n{reset_link}',
-                'noreply@workdnote.com',
+                settings.DEFAULT_FROM_EMAIL,
                 [email],
                 fail_silently=False,
-            )
-            return Response({'message': '이메일이 발송되었습니다. 터미널(콘솔)을 확인해주세요.'}, status=status.HTTP_200_OK)
+            ),
+            return Response({'message': '이메일이 발송되었습니다. 가입하신 이메일의 편함함을 확인해주세요.'}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'message': '해당 이메일로 가입된 사용자가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
