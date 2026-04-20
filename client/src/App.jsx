@@ -318,7 +318,7 @@ export default function App() {
     setSending(true);
     try {
       await api.auth.requestPasswordReset(resetEmail);
-      flash("초기화 정보를 보냈습니다. 터미널을 확인하세요!");
+      flash("초기화 정보를 이메일로 보냈습니다. 메일함을 확인해주세요!");
       setPg("login");
     } catch(e){ 
       flash("유저를 찾을 수 없거나 서버 오류가 발생했습니다.","err"); 
