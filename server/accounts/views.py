@@ -122,13 +122,19 @@ class PasswordResetRequestView(APIView):
             
             reset_link = f"{domain}/reset-password/{uid}/{token}/"
             
-            send_mail(
-                '워크드 노트 비밀번호 초기화',
-                f'비밀번호를 초기화하려면 아래 링크를 클릭하세요:\n\n{reset_link}',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            ),
+            try:
+                send_mail(
+                    '워크드 노트 비밀번호 초기화',
+                    f'비밀번호를 초기화하려면 아래 링크를 클릭하세요:\n\n{reset_link}',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+                print(f"DEBUG: Email successfully sent to {email} via {settings.EMAIL_HOST}")
+            except Exception as e:
+                print(f"CRITICAL ERROR: Failed to send email to {email}. Error: {str(e)}")
+                return Response({'message': '이메일 발송 중 서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
             return Response({'message': '이메일이 발송되었습니다. 가입하신 이메일의 편함함을 확인해주세요.'}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'message': '해당 이메일로 가입된 사용자가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
