@@ -63,6 +63,12 @@ const api = {
     patch: (id, data) => instance.patch(`/api/memos/${id}/`, data),
     delete: (id) => instance.delete(`/api/memos/${id}/`),
     search: (q) => instance.get(`/api/memos/search/?q=${encodeURIComponent(q)}`),
+    togglePublic: (id) => instance.post(`/api/memos/${id}/toggle_public/`),
+    addComment: (id, data) => instance.post(`/api/memos/${id}/add_comment/`, data),
+    addCollaborator: (id, email) => instance.post(`/api/memos/${id}/add_collaborator/`, { email }),
+    getShared: (slug) => instance.get(`/api/memos/shared/${slug}/`),
+    postSharedComment: (slug, data) => instance.post(`/api/memos/shared/${slug}/`, data),
+    importShared: (slug) => instance.post(`/api/memos/import/${slug}/`),
   },
   briefing: {
     today: () => instance.get("/api/briefing/today/"),

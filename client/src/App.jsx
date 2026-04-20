@@ -75,14 +75,64 @@ export default function App() {
   const [sf, setSf] = useState({ name: "", email: "", password: "", password_confirm: "" });
   const [ff, setFf] = useState({ email: "" });
 
+  const [coms, setComs] = useState([]);
+  const [nc, setNc] = useState("");
+  const [colbs, setColbs] = useState([]);
+  const [ne, setNe] = useState("");
+
   const flash = (m, t = "ok") => { setNotif({ m, t }); setTimeout(() => setNotif(null), 3000); };
 
   useEffect(() => {
     const handleResize = () => setIsMob(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
+    
+    // URL 기반 공유 페이지 감지
+    const path = window.location.pathname;
+    if (path.startsWith("/shared/")) {
+      const slug = path.split("/")[2];
+      loadSharedMemo(slug);
+    }
+    
     if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const loadSharedMemo = async (slug) => {
+    try {
+      const res = await api.memos.getShared(slug);
+      setSel(res); setView("shared"); setPg("shared");
+    } catch (e) { flash("메모를 불러올 수 없습니다.", "err"); }
+  };
+
+  const importMemo = async () => {
+    if (!user) return setPg("signup"); // 미가입 시 가입 유도
+    setSending(true);
+    try {
+      await api.memos.importShared(sel.share_slug);
+      flash("내 보관함에 저장되었습니다! 알람이 활성화됩니다.");
+      setPg("app"); setView("memos"); refresh();
+    } catch (e) { flash("가져오기 실패", "err"); }
+    finally { setSending(false); }
+  };
+
+  const postComment = async () => {
+    if(!nc.trim()) return;
+    try {
+      let res;
+      if (view === "shared") {
+        res = await api.memos.postSharedComment(sel.share_slug, { content: nc, author_name: user ? "" : "방문자" });
+      } else {
+        res = await api.memos.addComment(sel.id, { content: nc });
+      }
+      setComs([res, ...coms]); setNc("");
+      flash("댓글이 등록되었습니다.");
+    } catch (e) { flash("댓글 등록 실패", "err"); }
+  };
+
+  useEffect(() => {
+    if (sel && sel.comments) setComs(sel.comments);
+    if (sel && sel.collaborators) setColbs(sel.collaborators);
+  }, [sel]);
 
   useEffect(() => {
     api.auth.me().then(u => { setUser(u); setPg("app"); refresh(); }).catch(() => {});
@@ -153,6 +203,53 @@ export default function App() {
 
   const I = (p) => <input {...p} style={{ width: "100%", padding: "14px", border: `1px solid ${S.line}`, borderRadius: 12, fontSize: 15, background: "rgba(255,255,255,0.8)", ...p.style }} />;
   const B = ({ children, primary, small, style, ...p }) => <button {...p} style={{ border: "none", borderRadius: 12, fontSize: small ? 13 : 15, fontWeight: 700, cursor: "pointer", padding: small ? "10px 16px" : "16px 24px", background: primary ? S.accent : S.cream, color: primary ? "#fff" : S.ink, transition: "all .2s", ...style }}>{children}</button>;
+
+  if (pg === "shared" && sel) return (
+    <div style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/ai_smart_note_bg_1776684402748.png') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <style>{css}</style>
+      <div style={{ width: "100%", maxWidth: 700, animation: "up .8s ease" }}>
+         <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <Logo size={50} />
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: "#fff", marginTop: 12 }}>공유된 스마트 노트</h2>
+         </div>
+         
+         <div className="card" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(30px)", borderRadius: 32, padding: 40, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <div style={{ marginBottom: 32 }}>
+               <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 16 }}>{sel.title || "제목 없음"}</h1>
+               <div style={{ whiteSpace: "pre-wrap", fontSize: 18, lineHeight: 1.8, color: S.ink }}>{sel.content}</div>
+            </div>
+
+            <div style={{ background: "rgba(79,70,229,0.05)", padding: 24, borderRadius: 20, marginBottom: 32, border: `1px solid ${S.accent}20` }}>
+               <h3 style={{ fontSize: 14, fontWeight: 900, color: S.accent, marginBottom: 12 }}>✨ 이 메모의 AI 루틴</h3>
+               {sel.routines?.length ? sel.routines.map((r, i) => (
+                  <div key={i} style={{ fontSize: 14, marginBottom: 6 }}>🕒 <b>{r.time}</b> - {r.task}</div>
+               )) : <p style={{ fontSize: 13, color: S.muted }}>등록된 루틴이 없습니다.</p>}
+               <B primary onClick={importMemo} style={{ width: "100%", marginTop: 20 }}>내 Note로 등록하고 동일한 알람 받기</B>
+            </div>
+
+            <div style={{ borderTop: `1px solid ${S.line}`, paddingTop: 24 }}>
+               <p style={{ fontSize: 14, fontWeight: 900, marginBottom: 16 }}>💬 댓글 {coms.length}개</p>
+               <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+                  <input value={nc} onChange={e => setNc(e.target.value)} placeholder="의견을 남겨보세요..." style={{ flex: 1, padding: 14, borderRadius: 12, border: `1px solid ${S.line}` }} />
+                  <B primary onClick={postComment}>남기기</B>
+               </div>
+               <div style={{ maxHeight: 300, overflowY: "auto" }}>
+                  {coms.map(c => (
+                     <div key={c.id} style={{ marginBottom: 16, background: "#fff", padding: 16, borderRadius: 16, border: `1px solid ${S.line}` }}>
+                        <div style={{ fontWeight: 900, fontSize: 14, marginBottom: 4 }}>{c.author_name}</div>
+                        <div style={{ fontSize: 14, color: S.ink }}>{c.content}</div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+            
+            <div style={{ textAlign: "center", marginTop: 32 }}>
+               <button onClick={() => setPg("login")} style={{ background: "none", border: "none", color: S.muted, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>나도 워크드 노트 시작하기 →</button>
+            </div>
+         </div>
+      </div>
+    </div>
+  );
 
   if (pg !== "app") return (
     <div style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/ai_smart_note_bg_1776684402748.png') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -383,17 +480,44 @@ export default function App() {
                       <>
                         <div style={{ position: "absolute", top: 24, right: 32, display: "flex", gap: 10 }}>
                           <button onClick={() => { 
-                            if (navigator.share) navigator.share({ title: et, text: ec });
-                            else { navigator.clipboard.writeText(`${et}\n\n${ec}`); flash("클립보드에 복사되었습니다!"); }
-                          }} style={{ background: "none", border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                            <span>🔗</span> 공유
+                            api.memos.togglePublic(sel.id).then(res => {
+                              flash(res.is_public ? "메모가 공개되었습니다!" : "비공개로 전환되었습니다.");
+                              setSel({ ...sel, ...res });
+                            });
+                          }} style={{ background: sel.is_public ? S.accent : "none", color: sel.is_public ? "#fff" : S.ink, border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                             {sel.is_public ? "📢 공개 중" : "🔒 비공개"}
                           </button>
+                          {sel.is_public && (
+                            <button onClick={() => {
+                              const url = `${window.location.origin}/shared/${sel.share_slug}`;
+                              navigator.clipboard.writeText(url);
+                              flash("공유 링크가 복사되었습니다!");
+                            }} style={{ background: "none", border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer" }}>🔗 링크 복사</button>
+                          )}
                           <button onClick={() => { if (Notification.permission === "granted") flash("이 메모에 대한 알람이 활성화되었습니다."); else Notification.requestPermission(); }} style={{ background: "none", border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
                             <span>🔔</span> 알람
                           </button>
                         </div>
-                        <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목을 입력하세요" style={{ fontSize: 24, fontWeight: 800, border: "none", marginBottom: 24, padding: 0, width: "calc(100% - 140px)" }} />
+                        <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목을 입력하세요" style={{ fontSize: 24, fontWeight: 800, border: "none", marginBottom: 24, padding: 0, width: "calc(100% - 240px)" }} />
                         <textarea value={ec} onChange={e => setEc(e.target.value)} placeholder="메모 내용을 입력하세요. 자동으로 분석됩니다." style={{ flex: 1, border: "none", resize: "none", fontSize: 16, lineHeight: 1.8, padding: 0 }} />
+                        
+                        {/* Comment Section in Editor */}
+                        <div style={{ marginTop: 24, padding: "20px 0", borderTop: `1px solid ${S.line}` }}>
+                           <p style={{ fontSize: 11, fontWeight: 900, color: S.muted, marginBottom: 12 }}>💬 소통 및 댓글</p>
+                           <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                              <input value={nc} onChange={e => setNc(e.target.value)} placeholder="의견을 남겨보세요..." style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${S.line}` }} />
+                              <B primary small onClick={postComment}>등록</B>
+                           </div>
+                           <div style={{ maxHeight: 200, overflowY: "auto" }}>
+                              {coms.map(c => (
+                                <div key={c.id} style={{ marginBottom: 10, fontSize: 13 }}>
+                                   <span style={{ fontWeight: 800, marginRight: 6 }}>{c.author_name}</span>
+                                   <span style={{ color: S.muted }}>{c.content}</span>
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+
                         <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end", gap: 12 }}>
                           <B onClick={() => setSel(null)}>닫기</B>
                           <B primary onClick={saveMemo}>{sending ? "저장 중..." : "AI 저장 및 분석"}</B>

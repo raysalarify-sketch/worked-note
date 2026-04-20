@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 
 class Memo(models.Model):
@@ -10,6 +11,8 @@ class Memo(models.Model):
     categories = models.JSONField(default=list)  # 예: ["routine", "health", "finance"]
     color = models.IntegerField(default=0)  # 태그별 대표 색상
     pinned = models.BooleanField(default=False)
+    share_slug = models.UUIDField(default=uuid.uuid4, unique=False, null=True, blank=True) # 공유용 고유 아이디
+    is_public = models.BooleanField(default=False) # 공개 여부
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -18,6 +21,23 @@ class Memo(models.Model):
 
     def __str__(self):
         return self.title or '제목 없음'
+
+
+class MemoComment(models.Model):
+    """메모 댓글"""
+    memo = models.ForeignKey(Memo, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True) # Null이면 익명
+    author_name = models.CharField(max_length=50, default='익명') # 가입 안한 사람용
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Collaborator(models.Model):
+    """특정 대상 수정 권한"""
+    memo = models.ForeignKey(Memo, on_delete=models.CASCADE, related_name='collaborators')
+    email = models.EmailField()
+    can_edit = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class RoutineAlert(models.Model):

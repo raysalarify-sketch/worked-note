@@ -85,11 +85,10 @@ class MemoViewSet(viewsets.ModelViewSet):
         return MemoSerializer
 
     def get_queryset(self):
-        qs = Memo.objects.filter(user=self.request.user)
-        category = self.request.query_params.get('category')
-        if category:
-            qs = qs.filter(categories__contains=category)
-        return qs
+        # 내가 주인이거나, 협업자로 등록된 메모 조회
+        return Memo.objects.filter(
+            Q(user=self.request.user) | Q(collaborators__email=self.request.user.email)
+        ).distinct()
 
     def perform_create(self, serializer):
         memo = serializer.save(user=self.request.user)
@@ -102,7 +101,7 @@ class MemoViewSet(viewsets.ModelViewSet):
     def _analyze(self, memo):
         memo.categories = AIAnalyzer.classify(memo.content)
         memo.save()
-        AIAnalyzer.extract_all(self.request.user, memo)
+        AIAnalyzer.extract_all(memo.user, memo)
 
     @action(detail=False, methods=['get'])
     def search(self, request):
@@ -110,6 +109,98 @@ class MemoViewSet(viewsets.ModelViewSet):
         if not query: return Response([])
         qs = self.get_queryset().filter(Q(title__icontains=query) | Q(content__icontains=query))
         return Response(MemoListSerializer(qs, many=True).data)
+
+    @action(detail=True, methods=['post'])
+    def toggle_public(self, request, pk=None):
+        memo = self.get_object()
+        if memo.user != request.user:
+            return Response({'error': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
+        memo.is_public = not memo.is_public
+        memo.save()
+        return Response({'is_public': memo.is_public, 'share_slug': memo.share_slug})
+
+    @action(detail=True, methods=['post'])
+    def add_comment(self, request, pk=None):
+        memo = self.get_object() # 여기서 get_object는 queryset에 기반함 (주인이거나 협업자)
+        content = request.data.get('content')
+        if not content: return Response({'error': '내용을 입력하세요.'}, status=400)
+        
+        from .models import MemoComment
+        name = request.user.first_name or request.user.username
+        comment = MemoComment.objects.create(
+            memo=memo, user=request.user, 
+            author_name=name, content=content
+        )
+        return Response(MemoCommentSerializer(comment, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'])
+    def add_collaborator(self, request, pk=None):
+        memo = self.get_object()
+        if memo.user != request.user:
+            return Response({'error': '주인만 초대할 수 있습니다.'}, status=403)
+        email = request.data.get('email')
+        if not email: return Response({'error': '이메일을 입력하세요.'}, status=400)
+        
+        from .models import Collaborator
+        collab, created = Collaborator.objects.get_or_create(memo=memo, email=email)
+        return Response(CollaboratorSerializer(collab).data)
+
+
+class SharedMemoView(APIView):
+    """퍼블릭 공유 페이지 전용 뷰"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, slug):
+        try:
+            memo = Memo.objects.get(share_slug=slug, is_public=True)
+            return Response(MemoSerializer(memo, context={'request': request}).data)
+        except Memo.DoesNotExist:
+            return Response({'error': '존재하지 않거나 비공개된 메모입니다.'}, status=404)
+
+    def post(self, request, slug):
+        """익명 댓글 작성"""
+        try:
+            memo = Memo.objects.get(share_slug=slug, is_public=True)
+            content = request.data.get('content')
+            author_name = request.data.get('author_name', '익명 방문자')
+            
+            if not content: return Response({'error': '내용을 입력하세요.'}, status=400)
+            
+            from .models import MemoComment
+            user = request.user if request.user.is_authenticated else None
+            if user: author_name = user.first_name or user.username
+
+            comment = MemoComment.objects.create(
+                memo=memo, user=user, 
+                author_name=author_name, content=content
+            )
+            return Response(MemoCommentSerializer(comment, context={'request': request}).data)
+        except Memo.DoesNotExist:
+            return Response({'error': '작성할 수 없는 메모입니다.'}, status=404)
+
+
+class ImportSharedMemoView(APIView):
+    """공유받은 메모를 내 보관함으로 복사 및 알람 동기화"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug):
+        try:
+            original = Memo.objects.get(share_slug=slug, is_public=True)
+            # 메모 복사
+            new_memo = Memo.objects.create(
+                user=request.user,
+                title=f"[가져옴] {original.title}",
+                content=original.content,
+                color=original.color
+            )
+            # AI 재분석 (알람 자동 생성 포함)
+            new_memo.categories = AIAnalyzer.classify(new_memo.content)
+            new_memo.save()
+            AIAnalyzer.extract_all(request.user, new_memo)
+            
+            return Response({'message': '보관함에 저장되었습니다. 이제 똑같은 루틴 알람을 받을 수 있습니다!', 'id': new_memo.id})
+        except Memo.DoesNotExist:
+            return Response({'error': '가져올 수 없는 메모입니다.'}, status=404)
 
 
 class BriefingView(APIView):
