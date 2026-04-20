@@ -227,7 +227,7 @@ export default function App() {
   const B = ({ children, primary, small, style, ...p }) => <button {...p} style={{ border: "none", borderRadius: 12, fontSize: small ? 13 : 15, fontWeight: 700, cursor: "pointer", padding: small ? "10px 16px" : "16px 24px", background: primary ? S.accent : S.cream, color: primary ? "#fff" : S.ink, transition: "all .2s", ...style }}>{children}</button>;
 
   if (pg === "shared" && sel) return (
-    <div style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/ai_smart_note_bg_1776684402748.png') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/worked_note_homepage_1776660060862.png') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{css}</style>
       <div style={{ width: "100%", maxWidth: 700, animation: "up .8s ease" }}>
          <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -274,7 +274,7 @@ export default function App() {
   );
 
   if (pg !== "app") return (
-    <div style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/ai_smart_note_bg_1776684402748.png') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ minHeight: "100vh", background: `url('/brain/8fd7e4c9-fbe7-47f7-a304-ed807290cc3e/worked_note_homepage_1776660060862.png') center/cover no-repeat`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{css}</style>
       <div style={{ width: "100%", maxWidth: 420, animation: "up .8s ease" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
