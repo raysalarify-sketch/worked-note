@@ -181,7 +181,12 @@ export default function App() {
       await api.auth.signup({email:sf.email, name:sf.name, password:sf.pw, password_confirm:sf.pw2});
       flash("가입 완료!"); setPg("login"); setLf({email:sf.email,pw:""});
     } catch(e){ 
-      const msg = e.response?.data?.password_confirm?.[0] || e.response?.data?.email?.[0] || "가입 중 오류가 발생했습니다.";
+      const errorData = e.response?.data;
+      let msg = "가입 중 오류가 발생했습니다.";
+      if (errorData) {
+        if (typeof errorData === 'string') msg = errorData;
+        else msg = Object.values(errorData).flat().join(", ");
+      }
       setSe(msg); 
     } finally { setSending(false); }
   };

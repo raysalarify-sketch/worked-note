@@ -7,6 +7,9 @@ const API_URL = window.location.hostname === "localhost" || window.location.host
 const instance = axios.create({
   baseURL: API_URL,
   timeout: 40000,
+  withCredentials: true,
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken',
 });
 
 instance.interceptors.request.use(
