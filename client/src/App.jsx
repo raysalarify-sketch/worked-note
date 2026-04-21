@@ -193,11 +193,12 @@ export default function App() {
     try {
       const data = { title: et, content: ec };
       if(sel.id === "new") {
-        const m = await api.memos.create(data); setSel(m);
+        const m = await api.memos.create(data); 
+        setSel(m); setEt(m.title); setEc(m.content);
       } else {
         await api.memos.patch(sel.id, data);
       }
-      flash("AI가 메모를 분석하여 정리했습니다.");
+      flash("메모가 안전하게 저장되었습니다.");
       refresh();
     } catch (e) { flash("저장 중 오류 발생", "err"); }
     finally { setSending(false); }
@@ -327,20 +328,6 @@ export default function App() {
               <button onClick={() => setPg("login")} style={{ background: "none", border: "none", color: S.muted, fontSize: 13, cursor: "pointer", fontWeight: 700 }}>로그인으로 돌아가기</button>
             </div>
           )}
-        </div>
-        
-        {/* Features Preview */}
-        <div style={{ marginTop: 60, display: isMob ? "none" : "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, textAlign: "left", width: "100%", maxWidth: 1000, position: "relative", zIndex: 2 }}>
-          {[
-            { t: "✍️ 스마트 메모", d: "생각을 기록하면 AI가 분석하고 분류합니다.", c: "#4f46e5" },
-            { t: "⏰ 지능형 루틴", d: "메모 속 일정을 감지해 최적화된 알람을 제공합니다.", c: "#059669" },
-            { t: "💳 라이프 카드", d: "흩어진 재정과 건강 정보를 한눈에 시각화합니다.", c: "#d97706" }
-          ].map((f, i) => (
-            <div key={i} className="card" style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(20px)", border: `1px solid ${f.c}20`, padding: 24 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 12, color: f.c }}>{f.t}</h3>
-              <p style={{ fontSize: 13, color: S.muted, lineHeight: 1.6 }}>{f.d}</p>
-            </div>
-          ))}
         </div>
       </div>
       {notif && <div style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", background: notif.t === "err" ? "#ef4444" : S.accent, color: "#fff", padding: "16px 32px", borderRadius: 50, zIndex: 10000, fontWeight: 800, animation: "up .3s ease", boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}>{notif.m}</div>}
