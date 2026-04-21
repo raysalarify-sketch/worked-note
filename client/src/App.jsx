@@ -274,14 +274,14 @@ export default function App() {
   );
 
   if (pg !== "app") return (
-    <div id="worked-note-app-landing" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%)", display: "flex", alignItems: "center", justifyContent: isMob ? "center" : "flex-start", padding: isMob ? 20 : "0 120px" }}>
+    <div id="worked-note-app-landing" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{css}</style>
       <div style={{ width: "100%", maxWidth: 420, animation: "up .8s ease" }}>
-        <div style={{ textAlign: "left", marginBottom: 50, position: "relative", zIndex: 2 }}>
-          <div style={{ marginBottom: 24 }}>
+        <div style={{ textAlign: "center", marginBottom: 50, position: "relative", zIndex: 2 }}>
+          <div style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}>
             <Logo size={80} />
           </div>
-          <h1 style={{ fontSize: 56, fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, display: "flex", alignItems: "center", gap: 12 }}>
+          <h1 style={{ fontSize: 56, fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
             <span style={{ color: S.accent }}>({ROT_WORDS[rotIdx]})</span>
             <span style={{ background: "linear-gradient(to right, #111827, #4b5563)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Note</span>
           </h1>
