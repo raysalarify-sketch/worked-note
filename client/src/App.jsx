@@ -445,8 +445,7 @@ export default function App() {
               </div>
             )}
           </div>
-        </div>
-      </div>
+      )}
 
       {presentMode && sel && (
         <div style={{ position: "fixed", inset: 0, background: "#fff", zIndex: 10000, padding: "100px 15%", overflowY: "auto" }}>
