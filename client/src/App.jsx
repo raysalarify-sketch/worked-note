@@ -255,48 +255,87 @@ export default function App() {
   const B = ({children,primary,danger,small,style,...p}) => <button {...p} style={{border:"none",borderRadius:8,fontSize:small?12:14,fontWeight:600,cursor:"pointer",fontFamily:S.font,padding:small?"6px 12px":"12px 24px",background:danger?"#e11d48":primary?S.ink:S.cream,color:danger?"#fff":primary?S.paper:S.ink,transition:"all .2s",...style}} onMouseEnter={e=>{if(!p.disabled) e.currentTarget.style.opacity=0.9}} onMouseLeave={e=>{e.currentTarget.style.opacity=1}}>{children}</button>;
 
   // Views Partitioning
+  // Cinematic Showcase Logic
+  const [demoStep, setDemoStep] = useState(0);
+  useEffect(() => {
+    if (pg !== "login") return;
+    const it = setInterval(() => setDemoStep(s => (s + 1) % 3), 4000);
+    return () => clearInterval(it);
+  }, [pg]);
+
   if (pg === "login") return (
     <div style={{ display: "flex", height: "100vh", background: "#fff", overflow: "hidden", fontFamily: S.font }}>
-      <div style={{ flex: 1.2, background: S.cream, padding: "80px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", borderRight: `1px solid ${S.line}` }}>
-        <div style={{ maxWidth: 540 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-            <Logo size={32} />
-            <span style={{ fontSize: 16, fontWeight: 800, color: S.ink, letterSpacing: 2 }}>(oo) NOTE</span>
+      <div style={{ flex: 1.2, background: S.ink, padding: "80px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", borderRight: `1px solid ${S.line}`, color: "#fff" }}>
+        
+        {/* Dynamic Background Pattern */}
+        <div style={{ position: "absolute", inset: 0, opacity: 0.1, background: "radial-gradient(circle at 2px 2px, #fff 1px, transparent 0)", backgroundSize: "40px 40px" }} />
+        
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 640 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40, animation: "slideUpFade 0.8s ease" }}>
+            <Logo size={40} />
+            <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: 3 }}>(oo) NOTE</span>
           </div>
-          <h1 style={{ fontSize: 52, fontWeight: 800, color: S.ink, lineHeight: 1.1, marginBottom: 32, letterSpacing: -2 }}>노트는 도구여야<br />합니다.</h1>
-          <div style={{ display: "flex", flexDirection: "column", gap: 32, marginTop: 48 }}>
-            {[
-              { icon: "📝", t: "지능형 정산 엔진", d: "금액만 적으세요. 나머지는 (oo)이 대신 합니다.", bubble: "₩ 정산 자동화" },
-              { icon: "📺", t: "초대형 발표 모드", d: "클릭 한 번으로 메모가 명품 PT 화면으로 변합니다.", bubble: "📺 원클릭 PT" },
-              { icon: "↗", t: "심리스 발송 솔루션", d: "이메일, 문자, 카카오톡까지 원스톱으로 전달하세요.", bubble: "↗ 스마트 발송" }
-            ].map((f, i) => (
-              <div key={i} style={{ display: "flex", gap: 20, position: "relative" }}>
-                <div style={{ fontSize: 28 }}>{f.icon}</div>
-                <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: S.ink, marginBottom: 4 }}>{f.t}</h3>
-                  <p style={{ fontSize: 15, color: S.muted, lineHeight: 1.5 }}>{f.d}</p>
-                </div>
-                {/* Floating Feature Balloons */}
-                <div className="floating-balloon" style={{ position: "absolute", right: -120, top: 0, background: S.paper, padding: "6px 12px", borderRadius: 20, boxShadow: S.shadow, fontSize: 11, fontWeight: 700, color: S.ink, border: `1px solid ${S.line}`, animation: `float ${3 + i}s ease-in-out infinite` }}>
-                  {f.bubble}
+
+          <div style={{ height: 320, position: "relative" }}>
+            {demoStep === 0 && (
+              <div style={{ animation: "slideUpFade 0.8s ease" }}>
+                <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>기록이<br />돈이 됩니다.</h1>
+                <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>숫자만 적으면 (oo)이 즉시 계산하고<br />전문적인 인보이스로 변환합니다.</p>
+                <div style={{ background: "rgba(255,255,255,0.05)", padding: 24, borderRadius: 16, border: "1px solid rgba(255,255,255,0.1)", width: 340 }}>
+                   <div style={{ fontSize: 13, borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 10, marginBottom: 10, color: "rgba(255,255,255,0.4)" }}>Live Demo: 스마트 정산</div>
+                   <div style={{ fontSize: 15, fontWeight: 500 }}>식대 12,000원<br />교통비 5,500원</div>
+                   <div style={{ marginTop: 16, textAlign: "right", fontSize: 24, fontWeight: 800, color: "#fff" }}>₩17,500 <span style={{ fontSize: 14, color: "#0ea5e9" }}>●</span></div>
                 </div>
               </div>
+            )}
+            {demoStep === 1 && (
+              <div style={{ animation: "slideUpFade 0.8s ease" }}>
+                <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>지능형<br />연결의 힘.</h1>
+                <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>당신의 생각을 과거의 기록과<br />연결하여 더 큰 인사이트를 제공합니다.</p>
+                <div style={{ display: "flex", gap: 12 }}>
+                   <div style={{ background: "#fff", color: S.ink, padding: "12px 20px", borderRadius: 32, fontSize: 13, fontWeight: 700 }}>✨ 관련 연락처 추천</div>
+                   <div style={{ background: "rgba(255,255,255,0.1)", color: "#fff", padding: "12px 20px", borderRadius: 32, fontSize: 13, fontWeight: 700 }}>🔍 유사 문서 발견</div>
+                </div>
+              </div>
+            )}
+            {demoStep === 2 && (
+              <div style={{ animation: "slideUpFade 0.8s ease" }}>
+                <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>메모가 곧<br />작품이다.</h1>
+                <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>젠(Zen) 모드로 몰입하고,<br />단 한 번의 터치로 PT를 시작하세요.</p>
+                <div style={{ position: "relative", width: 400, height: 100, background: "rgba(255,255,255,0.05)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.1)" }}>
+                   <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#fff", color: S.ink, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>📺</div>
+                   <div style={{ marginLeft: 16, fontWeight: 700 }}>Zen PT Mode Active</div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div style={{ display: "flex", gap: 8, marginTop: 60 }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{ width: demoStep === i ? 40 : 8, height: 8, borderRadius: 4, background: demoStep === i ? "#fff" : "rgba(255,255,255,0.2)", transition: "all 0.4s ease" }} />
             ))}
           </div>
         </div>
       </div>
       <div style={{ flex: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 400, padding: 40 }}>
-          <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Welcome</h2>
-          <p style={{ color: S.muted, marginBottom: 40, fontSize: 15 }}>로그인하여 당신의 워크플로우를 이어가세요.</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div><label style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, display: "block" }}>이메일</label>{I({ value: lf.email, onChange: e => setLf({ ...lf, email: e.target.value }), placeholder: "name@example.com" })}</div>
-            <div><label style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, display: "block" }}>비밀번호</label>{I({ type: "password", value: lf.pw, onChange: e => setLf({ ...lf, pw: e.target.value }), placeholder: "••••••••" })}</div>
-            {le && <p style={{ color: "#e11d48", fontSize: 13, fontWeight: 600 }}>{le}</p>}
-            <B primary onClick={login} disabled={sending}>{sending ? "인증 중..." : "로그인"}</B>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-               <button onClick={()=>setPg("signup")} style={{ background: "none", border: "none", color: S.ink, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>회원가입</button>
-               <button onClick={()=>setPg("reset-request")} style={{ background: "none", border: "none", color: S.muted, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>비밀번호 찾기</button>
+        <div style={{ width: 400, padding: 40, animation: "slideUpFade 1s ease" }}>
+          <h2 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8, letterSpacing: -1 }}>Welcome Back</h2>
+          <p style={{ color: S.muted, marginBottom: 48, fontSize: 16, lineHeight: 1.5 }}>가장 스마트한 노트 앱 (oo) 에<br />오신 것을 환영합니다.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, display: "block", color: S.ink }}>Email Address</label>
+              {I({ value: lf.email, onChange: e => setLf({ ...lf, email: e.target.value }), placeholder: "name@example.com", style: { padding: "16px", borderRadius: 12 } })}
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, display: "block", color: S.ink }}>Password</label>
+              {I({ type: "password", value: lf.pw, onChange: e => setLf({ ...lf, pw: e.target.value }), placeholder: "••••••••", style: { padding: "16px", borderRadius: 12 } })}
+            </div>
+            {le && <div style={{ background: "#fef2f2", color: "#b91c1c", padding: "12px", borderRadius: 8, fontSize: 14, fontWeight: 600, textAlign: "center" }}>{le}</div>}
+            <B primary onClick={login} disabled={sending} style={{ padding: "18px", borderRadius: 12, fontSize: 16, fontWeight: 800, boxShadow: "0 10px 20px rgba(0,0,0,0.1)" }}>{sending ? "Authentication..." : "Sign In"}</B>
+            <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 12 }}>
+               <button onClick={()=>setPg("signup")} style={{ background: "none", border: "none", color: S.muted, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>Create Account</button>
+               <span style={{ color: S.line }}>|</span>
+               <button onClick={()=>setPg("reset-request")} style={{ background: "none", border: "none", color: S.muted, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>Forgot Password?</button>
             </div>
           </div>
         </div>
@@ -359,24 +398,55 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ flex: 1, overflowY: "auto", position: "relative" }}>
+          <div style={{ flex: 1, overflowY: "auto", position: "relative", background: "#fdfdfd" }}>
             {sel ? (
-              <div style={{ padding: "60px 80px", maxWidth: 900, margin: "0 auto" }}>
-                <input
-                  ref={tRef}
-                  value={et}
-                  onChange={e => setEt(e.target.value)}
-                  onFocus={()=>setEditing(true)}
-                  style={{ fontSize: 42, fontWeight: 800, border: "none", width: "100%", marginBottom: 32, letterSpacing: -2, outline: "none" }}
-                  placeholder="제목을 입력하세요"
-                />
-                <textarea
-                  value={ec}
-                  onChange={e => { setEc(e.target.value); setTotal(getSum(e.target.value)); }}
-                  onFocus={()=>setEditing(true)}
-                  style={{ width: "100%", height: "60vh", border: "none", fontSize: 18, lineHeight: 1.8, resize: "none", outline: "none", fontFamily: S.font }}
-                  placeholder="아이디어를 자유롭게 적어보세요..."
-                />
+              <div style={{ display: "flex", height: "100%" }}>
+                <div style={{ flex: 1, padding: "60px 80px", maxWidth: 900, margin: "0 auto" }}>
+                  <input
+                    ref={tRef}
+                    value={et}
+                    onChange={e => setEt(e.target.value)}
+                    onFocus={()=>setEditing(true)}
+                    style={{ fontSize: 42, fontWeight: 800, border: "none", width: "100%", marginBottom: 32, letterSpacing: -2, outline: "none", background: "transparent" }}
+                    placeholder="제목을 입력하세요"
+                  />
+                  <textarea
+                    value={ec}
+                    onChange={e => { setEc(e.target.value); setTotal(getSum(e.target.value)); }}
+                    onFocus={()=>setEditing(true)}
+                    style={{ width: "100%", height: "60vh", border: "none", fontSize: 18, lineHeight: 1.8, resize: "none", outline: "none", fontFamily: S.font, background: "transparent" }}
+                    placeholder="아이디어를 자유롭게 적어보세요..."
+                  />
+                </div>
+                
+                {/* Stunning AI Insight Sidebar (New Feature) */}
+                <div style={{ width: 280, borderLeft: `1px solid ${S.line}`, background: "#fcfcfc", padding: "32px 24px", animation: "right .5s ease" }}>
+                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+                     <span style={{ fontSize: 18 }}>💡</span>
+                     <span style={{ fontWeight: 800, fontSize: 14, letterSpacing: 1 }}>(oo) INSIGHT</span>
+                   </div>
+                   
+                   <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                     <div style={{ background: "#fff", padding: 16, borderRadius: 12, boxShadow: S.shadow, border: `1px solid ${S.line}` }}>
+                        <p style={{ fontSize: 11, color: S.muted, fontWeight: 700, marginBottom: 8 }}>지능형 자동 태그</p>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                           {["기획", "디자인"].map(t => <span key={t} style={{ fontSize: 11, background: S.cream, padding: "4px 8px", borderRadius: 6, fontWeight: 600 }}>#{t}</span>)}
+                        </div>
+                     </div>
+
+                     <div style={{ background: "#fff", padding: 16, borderRadius: 12, boxShadow: S.shadow, border: `1px solid ${S.line}` }}>
+                        <p style={{ fontSize: 11, color: S.muted, fontWeight: 700, marginBottom: 8 }}>연관 기록 추천</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: S.ink, cursor: "pointer" }} onMouseEnter={e=>e.target.style.color="#0ea5e9"} onMouseLeave={e=>e.target.style.color=S.ink}>📄 지난주 프로젝트 결과...</p>
+                        <p style={{ fontSize: 12, color: S.muted, marginTop: 4 }}>내용상 유사도 94%</p>
+                     </div>
+
+                     <div style={{ background: S.ink, color: "#fff", padding: 16, borderRadius: 12, marginTop: 40 }}>
+                        <p style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>✨ AI 문장 다듬기</p>
+                        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>현재 작성 중인 문장을 더 비즈니스 전문적으로 바꿀까요?</p>
+                        <button style={{ background: "#fff", color: S.ink, border: "none", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, marginTop: 12, cursor: "pointer" }}>지금 적용</button>
+                     </div>
+                   </div>
+                </div>
               </div>
             ) : (
               <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: S.muted }}>
