@@ -402,21 +402,61 @@ export default function App() {
             </div>
           )}
 
+          <div style={{ padding: "0 12px", display: "flex", flexDirection: "column", gap: 4, marginBottom: 20 }}>
+            <div onClick={()=>setView("memos")} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, cursor: "pointer", background: view==="memos"?S.cream:"transparent", color: view==="memos"?S.ink:S.muted, fontWeight: 700 }}>
+              <span style={{ fontSize: 18 }}>📝</span> Memos
+            </div>
+            <div onClick={()=>setView("contacts")} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, cursor: "pointer", background: view==="contacts"?S.cream:"transparent", color: view==="contacts"?S.ink:S.muted, fontWeight: 700 }}>
+              <span style={{ fontSize: 18 }}>👥</span> Contacts
+            </div>
+            <div onClick={()=>setView("history")} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, cursor: "pointer", background: view==="history"?S.cream:"transparent", color: view==="history"?S.ink:S.muted, fontWeight: 700 }}>
+              <span style={{ fontSize: 18 }}>📜</span> History
+            </div>
+          </div>
+
           <div style={{ flex: 1, padding: "0 12px", overflowY: "auto" }}>
-            <div style={{ padding: "10px" }}>{I({ value: q, onChange: e => setQ(e.target.value), placeholder: "검색..." })}</div>
-            {memos.map((m, i) => (
-              <div key={i} onClick={()=>pick(m)} style={{ padding: "16px 18px", cursor: "pointer", background: sel?.id===m.id?S.cream:"transparent", transition: "0.2s", borderRadius: 10, marginBottom: 4 }}>
-                <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{m.title || "제목 없음"}</p>
-                <p style={{ fontSize: 12, color: S.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.content?.slice(0, 40)}</p>
+            {view === "memos" && (
+              <>
+                <div style={{ padding: "10px" }}>{I({ value: q, onChange: e => setQ(e.target.value), placeholder: "검색..." })}</div>
+                {memos.filter(m => (m.title+m.content).toLowerCase().includes(q.toLowerCase())).map((m, i) => (
+                  <div key={i} onClick={()=>pick(m)} style={{ padding: "16px 18px", cursor: "pointer", background: sel?.id===m.id?S.cream:"transparent", transition: "0.2s", borderRadius: 10, marginBottom: 4 }}>
+                    <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{m.title || "제목 없음"}</p>
+                    <p style={{ fontSize: 12, color: S.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.content?.slice(0, 40)}</p>
+                  </div>
+                ))}
+              </>
+            )}
+            {view === "contacts" && (
+              <>
+                <div style={{ padding: "10px" }}>{I({ value: conQ, onChange: e => setConQ(e.target.value), placeholder: "연락처 검색..." })}</div>
+                {contacts.filter(c => (c.name+c.email).toLowerCase().includes(conQ.toLowerCase())).map((c, i) => (
+                  <div key={i} onClick={()=>{setConEdit(c);setConData(c);setConForm(true)}} style={{ padding: "14px 18px", cursor: "pointer", borderRadius: 10, marginBottom: 4, background: S.paper }}>
+                    <p style={{ fontWeight: 700, fontSize: 14 }}>{c.name}</p>
+                    <p style={{ fontSize: 11, color: S.muted }}>{c.email || c.phone}</p>
+                  </div>
+                ))}
+              </>
+            )}
+            {view === "history" && (
+              <div style={{ padding: "10px" }}>
+                {history.map((h, i) => (
+                  <div key={i} style={{ padding: "14px", borderRadius: 10, border: `1px solid ${S.line}`, marginBottom: 8, background: "#fff" }}>
+                    <p style={{ fontSize: 12, fontWeight: 700 }}>{h.subject || "메시지 발송"}</p>
+                    <p style={{ fontSize: 10, color: S.muted }}>{fmtFull(h.created_at)}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
           
           {!isMobile && (
             <div style={{ padding: "20px", borderTop: `1px solid ${S.line}`, display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{ width: 32, height: 32, borderRadius: "50%", background: S.ink, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>{user?.name?.[0]}</div>
-              <span style={{ fontWeight: 700, fontSize: 14 }}>{user?.name}</span>
-              <button onClick={logout} style={{ marginLeft: "auto", background: "none", border: "none", color: S.muted, fontSize: 12, cursor: "pointer" }}>로그아웃</button>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{user?.name}</p>
+                <p style={{ fontSize: 10, color: S.muted, margin: 0 }}>{user?.email}</p>
+              </div>
+              <button onClick={logout} style={{ background: "none", border: "none", color: S.muted, fontSize: 12, cursor: "pointer" }}>로그아웃</button>
             </div>
           )}
         </div>
@@ -439,42 +479,134 @@ export default function App() {
           </div>
 
           <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-            <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "30px 20px" : "60px 80px" }}>
-              {sel ? (
-                <div style={{ width: "100%", maxWidth: 800, margin: "0 auto" }}>
-                  <input
-                    ref={tRef}
-                    value={et}
-                    onChange={e => setEt(e.target.value)}
-                    onFocus={()=>setEditing(true)}
-                    style={{ fontSize: isMobile ? 28 : 42, fontWeight: 800, border: "none", width: "100%", marginBottom: 24, letterSpacing: -1, outline: "none" }}
-                    placeholder="제목"
-                  />
-                  <textarea
-                    value={ec}
-                    onChange={e => { setEc(e.target.value); setTotal(getSum(e.target.value)); }}
-                    onFocus={()=>setEditing(true)}
-                    style={{ width: "100%", height: "60vh", border: "none", fontSize: isMobile ? 16 : 18, lineHeight: 1.8, resize: "none", outline: "none", fontFamily: S.font, background: "transparent" }}
-                    placeholder="적어보세요..."
-                  />
+            {/* Main Editor / View Content */}
+            <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "30px 20px" : "60px 80px", position: "relative" }}>
+              {view === "memos" ? (
+                sel ? (
+                  <div style={{ width: "100%", maxWidth: 800, margin: "0 auto" }}>
+                    <input
+                      ref={tRef}
+                      value={et}
+                      onChange={e => setEt(e.target.value)}
+                      onFocus={()=>setEditing(true)}
+                      style={{ fontSize: isMobile ? 28 : 42, fontWeight: 800, border: "none", width: "100%", marginBottom: 24, letterSpacing: -1, outline: "none" }}
+                      placeholder="제목"
+                    />
+                    <textarea
+                      value={ec}
+                      onChange={e => { setEc(e.target.value); setTotal(getSum(e.target.value)); }}
+                      onFocus={()=>setEditing(true)}
+                      style={{ width: "100%", height: "60vh", border: "none", fontSize: isMobile ? 16 : 18, lineHeight: 1.8, resize: "none", outline: "none", fontFamily: S.font, background: "transparent" }}
+                      placeholder="적어보세요..."
+                    />
+                  </div>
+                ) : (
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: S.muted }}>
+                     <div style={{ textAlign: "center" }}>
+                       <div style={{ fontSize: 48, marginBottom: 16 }}>📂</div>
+                       <p>메모를 선택하거나 새 메모를 만드세요.</p>
+                     </div>
+                  </div>
+                )
+              ) : view === "contacts" ? (
+                <div style={{ width: "100%", maxWidth: 1000, margin: "0 auto" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+                    <h2 style={{ fontSize: 32, fontWeight: 800 }}>Contacts</h2>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <B small onClick={()=>setConPaste(true)}>📋 일괄 붙여넣기</B>
+                      <B primary onClick={()=>{setConEdit(null);setConData({name:"",email:"",phone:"",kakao_id:"",group:"회사"});setConForm(true)}}>+ 연락처 추가</B>
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
+                    {contacts.map((c, i) => (
+                      <div key={i} style={{ background: "#fff", padding: 24, borderRadius: 16, border: `1px solid ${S.line}`, boxShadow: S.shadow }}>
+                        <h3 style={{ margin: "0 0 8px 0" }}>{c.name}</h3>
+                        <p style={{ margin: 0, fontSize: 13, color: S.muted }}>{c.email}</p>
+                        <p style={{ margin: "8px 0", fontSize: 13 }}>{c.phone}</p>
+                        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                          <B small onClick={()=>{setConEdit(c);setConData(c);setConForm(true)}}>수정</B>
+                          <B small danger onClick={async ()=>{ if(confirm("삭제할까요?")) { await api.contacts.delete(c.id); load(); } }}>삭제</B>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
-                <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: S.muted }}>
-                   <div style={{ textAlign: "center" }}>
-                     <div style={{ fontSize: 48, marginBottom: 16 }}>📂</div>
-                     <p>메모를 선택하세요.</p>
-                   </div>
+                <div style={{ width: "100%", maxWidth: 1000, margin: "0 auto" }}>
+                  <h2 style={{ fontSize: 32, fontWeight: 800, marginBottom: 32 }}>Messaging History</h2>
+                  {history.map((h, i) => (
+                    <div key={i} style={{ background: "#fff", padding: 20, borderRadius: 16, border: `1px solid ${S.line}`, marginBottom: 16 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700 }}>{h.subject || "메시지 발송"}</p>
+                      <p style={{ fontSize: 13, margin: "8px 0" }}>{h.message}</p>
+                      <span style={{ fontSize: 11, color: S.muted }}>{fmtFull(h.created_at)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Floating Balloons for Feature Discovery */}
+              {!isMobile && !sel && (
+                <div style={{ position: "absolute", top: "15%", right: "10%", animation: "float 4s infinite ease-in-out" }}>
+                  <div className="floating-balloon" style={{ background: "#fff", padding: "16px 20px", borderRadius: "16px 16px 16px 0", boxShadow: S.shadow, border: `1px solid ${S.line}`, fontSize: 14, fontWeight: 600, width: 220, position: "relative" }}>
+                    "새 메모를 작성해서 <br/>협업을 시작해보세요! 🚀"
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* AI Insight Sidebar - Desktop Only */}
-            {!isMobile && sel && (
-              <div style={{ width: 280, borderLeft: `1px solid ${S.line}`, background: "#fcfcfc", padding: "32px 24px", animation: "right .5s ease" }}>
-                <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 20 }}>💡 INSIGHT</div>
+            {/* Side Panels - Messaging / AI */}
+            {sendOpen && (
+              <div style={{ width: 400, borderLeft: `1px solid ${S.line}`, background: "#fff", padding: 32, display: "flex", flexDirection: "column", animation: "right .3s ease" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
+                  <h3 style={{ margin: 0 }}>메시지 전송</h3>
+                  <button onClick={()=>setSendOpen(false)} style={{ background: "none", border: "none", fontSize: 20 }}>✕</button>
+                </div>
+                <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 800, marginBottom: 8, display: "block" }}>채널</label>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {CHANNELS.map(ch => (
+                        <B key={ch.key} small onClick={()=>setSendCh(ch.key)} primary={sendCh===ch.key} style={{ flex: 1 }}>{ch.icon} {ch.label}</B>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 800, marginBottom: 8, display: "block" }}>수신자 ({selCon.length})</label>
+                    <div style={{ border: `1px solid ${S.line}`, borderRadius: 8, padding: 8, maxHeight: 150, overflowY: "auto" }}>
+                      {contacts.map(c => (
+                        <div key={c.id} onClick={() => setSelCon(p => p.includes(c.email)?p.filter(x=>x!==c.email):[...p, c.email])} style={{ padding: "8px", cursor: "pointer", background: selCon.includes(c.email)?"#f0f9ff":"transparent", borderRadius: 6, fontSize: 12 }}>
+                          {c.name} ({c.email})
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 800, marginBottom: 8, display: "block" }}>제목</label>
+                    {I({ value: sendSub, onChange: e => setSendSub(e.target.value) })}
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 800, marginBottom: 8, display: "block" }}>메시지</label>
+                    <textarea value={sendMsg} onChange={e => setSendMsg(e.target.value)} style={{ width: "100%", height: 150, padding: 12, borderRadius: 8, border: `1px solid ${S.line}`, fontSize: 13, resize: "none" }} />
+                  </div>
+                </div>
+                <B primary onClick={send} disabled={sending} style={{ marginTop: 24 }}>{sending ? "전송 중..." : "전송하기"}</B>
+              </div>
+            )}
+
+            {!sendOpen && !isMobile && sel && (
+              <div style={{ width: 280, borderLeft: `1px solid ${S.line}`, background: "#fcfcfc", padding: "32px 24px" }}>
+                <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 24, letterSpacing: 1 }}>💡 INSIGHTS</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div style={{ background: "#fff", padding: 12, borderRadius: 10, boxShadow: S.shadow, border: `1px solid ${S.line}`, fontSize: 12 }}>
-                    관련 태그: #기획 #개발
+                  <div style={{ background: "#fff", padding: 16, borderRadius: 12, boxShadow: S.shadow, borderLeft: "4px solid #0ea5e9" }}>
+                    <p style={{ fontSize: 11, fontWeight: 800, color: "#0ea5e9", margin: "0 0 8px 0" }}>스케줄 감지</p>
+                    <p style={{ fontSize: 13, margin: 0 }}>회의 일정이 감지되었습니다. 캘린더에 추가할까요?</p>
+                  </div>
+                  <div style={{ background: "#fff", padding: 16, borderRadius: 12, boxShadow: S.shadow }}>
+                    <p style={{ fontSize: 11, fontWeight: 800, color: S.muted, margin: "0 0 8px 0" }}>추천 템플릿</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <B small onClick={()=>insertTemplate("meet")}>📅 회의록 양식</B>
+                      <B small onClick={()=>insertTemplate("calc")}>💸 정산 양식</B>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -490,6 +622,38 @@ export default function App() {
               </div>
             )}
           </div>
+      )}
+
+      {/* Modals - Contacts Form / Receipt / PW */}
+      {conForm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#fff", padding: 40, borderRadius: 20, width: 400, boxShadow: S.shadow }}>
+            <h3 style={{ marginBottom: 24 }}>{conEdit ? "연락처 수정" : "새 연락처 추가"}</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {I({ placeholder: "이름", value: conData.name, onChange: e => setConData({...conData, name: e.target.value}) })}
+              {I({ placeholder: "이메일", value: conData.email, onChange: e => setConData({...conData, email: e.target.value}) })}
+              {I({ placeholder: "전화번호", value: conData.phone, onChange: e => setConData({...conData, phone: e.target.value}) })}
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <B primary onClick={saveCon} style={{ flex: 1 }}>저장</B>
+                <B onClick={()=>setConForm(false)} style={{ flex: 1 }}>취소</B>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {conPaste && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#fff", padding: 40, borderRadius: 20, width: 500, boxShadow: S.shadow }}>
+            <h3 style={{ marginBottom: 12 }}>일괄 붙여넣기</h3>
+            <p style={{ fontSize: 13, color: S.muted, marginBottom: 20 }}>이름, 이메일, 전화번호가 포함된 텍스트를 줄바꿈으로 구분해 붙여넣으세요.</p>
+            <textarea value={conPasteText} onChange={e => setConPasteText(e.target.value)} style={{ width: "100%", height: 200, padding: 16, borderRadius: 12, border: `1px solid ${S.line}`, fontSize: 13, marginBottom: 20 }} />
+            <div style={{ display: "flex", gap: 8 }}>
+              <B primary onClick={async ()=>{ flash("준비 중인 기능입니다."); setConPaste(false); }} style={{ flex: 1 }}>추가하기</B>
+              <B onClick={()=>setConPaste(false)} style={{ flex: 1 }}>취소</B>
+            </div>
+          </div>
+        </div>
       )}
 
       {presentMode && sel && (
