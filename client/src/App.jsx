@@ -141,6 +141,8 @@ export default function App() {
   const [presentMode, setPresentMode] = useState(false);
   const tRef = useRef(null);
   const saveRef = useRef(null);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetForm, setResetForm] = useState({ uid: "", token: "", newPw: "" });
 
   const flash = (m,t="ok") => { setNotif({m,t}); setTimeout(()=>setNotif(null),2500); };
 
