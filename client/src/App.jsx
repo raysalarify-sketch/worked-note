@@ -328,6 +328,20 @@ export default function App() {
             </div>
           )}
         </div>
+        
+        {/* Features Preview */}
+        <div style={{ marginTop: 60, display: isMob ? "none" : "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, textAlign: "left", width: "100%", maxWidth: 1000, position: "relative", zIndex: 2 }}>
+          {[
+            { t: "✍️ 스마트 메모", d: "생각을 기록하면 AI가 분석하고 분류합니다.", c: "#4f46e5" },
+            { t: "⏰ 지능형 루틴", d: "메모 속 일정을 감지해 최적화된 알람을 제공합니다.", c: "#059669" },
+            { t: "💳 라이프 카드", d: "흩어진 재정과 건강 정보를 한눈에 시각화합니다.", c: "#d97706" }
+          ].map((f, i) => (
+            <div key={i} className="card" style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(20px)", border: `1px solid ${f.c}20`, padding: 24 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 12, color: f.c }}>{f.t}</h3>
+              <p style={{ fontSize: 13, color: S.muted, lineHeight: 1.6 }}>{f.d}</p>
+            </div>
+          ))}
+        </div>
       </div>
       {notif && <div style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", background: notif.t === "err" ? "#ef4444" : S.accent, color: "#fff", padding: "16px 32px", borderRadius: 50, zIndex: 10000, fontWeight: 800, animation: "up .3s ease", boxShadow: "0 10px 40px rgba(0,0,0,0.3)" }}>{notif.m}</div>}
       <style>{`
@@ -503,23 +517,23 @@ export default function App() {
                     {sel ? (
                       <>
                         <div style={{ position: "absolute", top: 24, right: 32, display: "flex", gap: 10 }}>
-                          <button onClick={toggleLock} style={{ background: sel.is_locked ? S.accent : "none", color: sel.is_locked ? "#fff" : S.ink, border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                             {sel.is_locked ? "🔑 잠금 됨" : "🔓 잠금"}
+                          <button onClick={toggleLock} title="비밀번호 잠금" style={{ background: sel.is_locked ? S.accent : "none", color: sel.is_locked ? "#fff" : S.ink, border: `1px solid ${S.line}`, borderRadius: 10, padding: "8px 12px", fontSize: 13, cursor: "pointer", transition: "all .2s" }}>
+                             {sel.is_locked ? "🔒 잠금" : "🔓 해제"}
                           </button>
                           <button onClick={() => { 
                             api.memos.togglePublic(sel.id).then(res => {
-                              flash(res.is_public ? "메모가 공개되었습니다!" : "비공개로 전환되었습니다.");
+                              flash(res.is_public ? "메모가 전 세계에 공개되었습니다!" : "비공개로 전환되었습니다.");
                               setSel({ ...sel, ...res });
                             });
-                          }} style={{ background: sel.is_public ? S.accent : "none", color: sel.is_public ? "#fff" : S.ink, border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                             {sel.is_public ? "📢 공개 중" : "🔒 비공개"}
+                          }} style={{ background: sel.is_public ? "#059669" : "none", color: sel.is_public ? "#fff" : S.ink, border: `1px solid ${S.line}`, borderRadius: 10, padding: "8px 12px", fontSize: 13, cursor: "pointer", transition: "all .2s" }}>
+                             {sel.is_public ? "🌐 공개 중" : "🔒 비공개"}
                           </button>
                           {sel.is_public && (
                             <button onClick={() => {
                               const url = `${window.location.origin}/shared/${sel.share_slug}`;
                               navigator.clipboard.writeText(url);
-                              flash("공유 링크가 복사되었습니다!");
-                            }} style={{ background: "none", border: `1px solid ${S.line}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer" }}>🔗 링크 복사</button>
+                              flash("공유 링크가 클립보드에 복사되었습니다!");
+                            }} style={{ background: S.accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(79,70,229,0.2)" }}>🔗 링크 복사</button>
                           )}
                         </div>
                         <input value={et} onChange={e => setEt(e.target.value)} placeholder="제목을 입력하세요" style={{ fontSize: 24, fontWeight: 800, border: "none", marginBottom: 24, padding: 0, width: "calc(100% - 320px)" }} />
