@@ -234,8 +234,10 @@ export default function App() {
         flash("이메일로 재설정 링크를 보냈습니다."); setPg("login");
       }
     } catch (e) { 
-      const msg = e.response?.data?.message || "비밀번호 초기화 요청 중 오류가 발생했습니다.";
-      flash(msg, "err"); 
+      // RAW 에러 노출로 원인 파악
+      const serverMsg = e.response?.data?.message;
+      const errorDetail = e.response?.statusText || e.message;
+      flash(`오류: ${serverMsg || errorDetail}`, "err"); 
     }
     finally { setSending(false); }
   };

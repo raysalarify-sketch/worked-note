@@ -118,7 +118,12 @@ class PasswordResetRequestView(APIView):
                 'token': token
             })
         except Exception as e:
-            return Response({'message': f'처리 중 오류: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            import traceback
+            error_trace = traceback.format_exc()
+            return Response({
+                'message': f'서버 내부 로직 오류: {str(e)}',
+                'debug': error_trace[:200]
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DebugLookupView(APIView):
