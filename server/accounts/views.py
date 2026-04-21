@@ -91,13 +91,19 @@ class PasswordResetRequestView(APIView):
         email_clean = email.lower().strip()
 
         try:
-            # 이메일 또는 사용자명으로 검색
-            user = User.objects.filter(
-                Q(email__iexact=email_clean) | Q(username__iexact=email_clean)
-            ).first()
+            # 1차 검색: 정확한 이메일 매칭 (대소문자 무시)
+            user = User.objects.filter(email__iexact=email_clean).first()
+            
+            # 2차 검색: 사용자명(Username)이 이메일 형식으로 저장된 경우 대응
+            if not user:
+                user = User.objects.filter(username__iexact=email_clean).first()
+                
+            # 3차 검색: 혹시 모를 필드 불일치 대응 (이메일 필드에 사용자명이 있는 등)
+            if not user:
+                user = User.objects.filter(Q(email__icontains=email_clean) | Q(username__icontains=email_clean)).first()
 
             if not user:
-                return Response({'message': '현재 등록된 계정이 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'message': '가입된 기록을 찾을 수 없습니다. 이메일 주소를 다시 확인해 주세요.'}, status=status.HTTP_404_NOT_FOUND)
             
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
