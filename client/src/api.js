@@ -54,7 +54,7 @@ const api = {
       if (user) return Promise.resolve(JSON.parse(user));
       return instance.get("/api/auth/me/");
     },
-    requestPasswordReset: (email) => instance.post("/api/auth/password_reset/", { email }),
+    forgotRequest: (email) => instance.post("/api/auth/password_reset/", { email }),
     confirmPasswordReset: (data) => instance.post("/api/auth/password_reset_confirm/", data),
   },
   memos: {
