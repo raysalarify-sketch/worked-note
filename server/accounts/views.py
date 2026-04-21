@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db.models import Q
 from rest_framework import status, generics, permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -112,7 +113,23 @@ class PasswordResetRequestView(APIView):
         from django.utils.encoding import force_bytes
 
         try:
-            user = User.objects.get(email=email)
+        # 입력값 정규화 (대소문자/공백 처리)
+        email_clean = email.lower().strip() if email else ""
+
+        try:
+            # 1차 검색: 정확한 이메일 매칭 (대소문자 무시)
+            user = User.objects.filter(email__iexact=email_clean).first()
+            
+            # 2차 검색: 사용자명(Username)이 이메일 형식으로 저장된 경우 대응
+            if not user:
+                user = User.objects.filter(username__iexact=email_clean).first()
+                
+            # 3차 검색: 혹시 모를 필드 불일치 대응
+            if not user:
+                user = User.objects.filter(Q(email__icontains=email_clean) | Q(username__icontains=email_clean)).first()
+
+            if not user:
+                raise User.DoesNotExist
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
