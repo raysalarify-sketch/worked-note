@@ -2,7 +2,7 @@ services:
   - type: web
     name: worked-note
     env: python
-    buildCommand: "pip install -r requirements.txt && python server/manage.py collectstatic --no-input && python server/manage.py migrate"
+    buildCommand: "pip install -r requirements.txt && python server/manage.py collectstatic --no-input --clear && python server/manage.py migrate"
     startCommand: "gunicorn --chdir server config.wsgi"
     envVars:
       - key: PYTHON_VERSION
