@@ -124,10 +124,10 @@ export default function App() {
   const [sending, setSending] = useState(false);
   const [pwForm, setPwForm] = useState({ old: "", new1: "", new2: "" });
   const [pwOpen, setPwOpen] = useState(false);
-  const [wsName, setWsName] = useState(localStorage.getItem("wn-wsname") || "(oo) Note");
+  const [wsName, setWsName] = useState(localStorage.getItem("wn-wsname") || "oo.");
   const [editWs, setEditWs] = useState(false);
   const [rotIdx, setRotIdx] = useState(0);
-  const ROT_WORDS = ["기획", "개발", "디자인", "영업", "마케팅", "개인", "비즈니스"];
+  const ROT_WORDS = ["PLATFORM.", "PERSPECTIVE.", "STANDARD.", "INTELLIGENCE.", "LENS."];
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const [presentMode, setPresentMode] = useState(false);
@@ -292,15 +292,14 @@ export default function App() {
         <div style={{ flex: 1.2, background: S.ink, padding: "80px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", borderRight: `1px solid ${S.line}`, color: "#fff" }}>
           <div style={{ position: "absolute", inset: 0, opacity: 0.1, background: "radial-gradient(circle at 2px 2px, #fff 1px, transparent 0)", backgroundSize: "40px 40px" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 640 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 40 }}>
-              <Logo size={52} />
-              <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: -2, color: "#fff" }}>oo</span>
-                <span style={{ fontSize: 32, fontWeight: 300, letterSpacing: -1, color: "rgba(255,255,255,0.7)" }}>note</span>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", marginBottom: 6, marginLeft: 2 }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 40 }}>
+              <Logo size={64} />
+              <div style={{ display: "flex", alignItems: "baseline" }}>
+                <span style={{ fontSize: 48, fontWeight: 800, letterSpacing: -4, color: "#fff" }}>oo</span>
+                <span style={{ fontSize: 48, fontWeight: 800, color: "#0ea5e9", marginLeft: 2 }}>.</span>
               </div>
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#0ea5e9", marginBottom: 12, letterSpacing: 2, textTransform: "uppercase" }}>FOR {ROLES[roleIdx]}S</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "rgba(255,255,255,0.4)", marginBottom: 12, letterSpacing: 4 }}>THE {ROLES[roleIdx].toUpperCase()} STANDARD</div>
 
             <div style={{ height: 320, position: "relative" }}>
               {demoStep === 0 && (
@@ -346,8 +345,8 @@ export default function App() {
 
       <div style={{ flex: isMobile ? 1 : 0.8, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ width: isMobile ? "90%" : 400, padding: isMobile ? "20px 0" : 40, animation: "slideUpFade 1s ease" }}>
-          {!isMobile && <h2 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8, letterSpacing: -1 }}>Welcome Back</h2>}
-          <p style={{ color: S.muted, marginBottom: 40, fontSize: 16, lineHeight: 1.5 }}>{isMobile ? "계정에 로그인하세요." : "가장 스마트한 노트 앱 (oo) 에 오신 것을 환영합니다."}</p>
+          {!isMobile && <h2 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8, letterSpacing: -1 }}>Get Started with oo.</h2>}
+          <p style={{ color: S.muted, marginBottom: 40, fontSize: 16, lineHeight: 1.5 }}>{isMobile ? "계정에 로그인하여 oo.를 시작하세요." : "세상을 바라보는 가장 명확한 시선, oo.에 오신 것을 환영합니다."}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
               <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, display: "block" }}>Email</label>
@@ -375,15 +374,14 @@ export default function App() {
       {/* Sidebar - Mobile Responsive */}
       {(!isMobile || !sel) && (
         <div style={{ width: isMobile ? "100%" : 260, borderRight: `1px solid ${S.line}`, background: "#fff", display: "flex", flexDirection: "column", height: isMobile ? "auto" : "100vh" }}>
-          <div style={{ padding: "28px 24px", display: "flex", alignItems: "center", gap: 12 }}>
-            <Logo size={32} />
-            <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
-              <span style={{ fontWeight: 800, fontSize: 19, letterSpacing: -1.5 }}>oo</span>
-              <span style={{ fontWeight: 300, fontSize: 19, letterSpacing: -0.5, color: S.muted }}>note</span>
-              <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#0ea5e9", marginBottom: 4 }} />
+          <div style={{ padding: "32px 24px", display: "flex", alignItems: "center", gap: 12 }}>
+            <Logo size={36} />
+            <div style={{ display: "flex", alignItems: "baseline" }}>
+              <span style={{ fontWeight: 800, fontSize: 24, letterSpacing: -2 }}>oo</span>
+              <span style={{ fontWeight: 800, fontSize: 24, color: "#0ea5e9" }}>.</span>
             </div>
           </div>
-          <div style={{ padding: "0 24px 16px", fontSize: 10, fontWeight: 800, color: "#0ea5e9", letterSpacing: 1, textTransform: "uppercase" }}>{ROLES[roleIdx]} EDITION</div>
+          <div style={{ padding: "0 24px 20px", fontSize: 10, fontWeight: 800, color: S.muted, letterSpacing: 2 }}>{ROLES[roleIdx].toUpperCase()} EDITION</div>
           {isMobile && view === "memos" && <div style={{ padding: "0 16px 20px" }}><B primary style={{ width: "100%" }} onClick={newMemo}>+ 새 메모 작성</B></div>}
           
           {!isMobile && (
