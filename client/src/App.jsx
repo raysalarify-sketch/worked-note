@@ -72,6 +72,7 @@ const Logo = ({size=32, ...p}) => (
 );
 
 export default function App() {
+  console.log("(oo) Note Initializing... " + new Date().getTime());
   const [pg, setPg] = useState("login");
   const [user, setUser] = useState(null);
   const [memos, setMemos] = useState([]);
