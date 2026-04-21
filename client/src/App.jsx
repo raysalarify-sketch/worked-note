@@ -174,10 +174,15 @@ export default function App() {
     if(!sf.name.trim()){setSe("이름을 입력해주세요.");return;}
     if(!sf.email.includes("@")){setSe("이메일을 확인해주세요.");return;}
     if(sf.pw.length<4){setSe("비밀번호는 4자 이상입니다.");return;}
+    if(sf.pw !== sf.pw2){setSe("비밀번호가 일치하지 않습니다.");return;}
+    setSending(true);
     try {
       await api.auth.signup({email:sf.email, name:sf.name, password:sf.pw, password_confirm:sf.pw2});
       flash("가입 완료!"); setPg("login"); setLf({email:sf.email,pw:""});
-    } catch(e){ setSe("이미 가입된 이메일이거나 오류가 발생했습니다."); }
+    } catch(e){ 
+      const msg = e.response?.data?.password_confirm?.[0] || e.response?.data?.email?.[0] || "가입 중 오류가 발생했습니다.";
+      setSe(msg); 
+    } finally { setSending(false); }
   };
 
   const logout = () => { api.auth.logout(); setUser(null); setPg("login"); };
@@ -498,10 +503,11 @@ export default function App() {
              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {I({ placeholder: "이름", value: sf.name, onChange: e => setSf({ ...sf, name: e.target.value }) })}
                 {I({ placeholder: "이메일", value: sf.email, onChange: e => setSf({ ...sf, email: e.target.value }) })}
-                {I({ type: "password", placeholder: "비밀번호", value: sf.pw, onChange: e => setSf({ ...sf, pw: e.target.value }) })}
-                {se && <p style={{ color: "red", fontSize: 12 }}>{se}</p>}
+                {I({ type: "password", placeholder: "비밀번호 (4자 이상)", value: sf.pw, onChange: e => setSf({ ...sf, pw: e.target.value }) })}
+                {I({ type: "password", placeholder: "비밀번호 확인", value: sf.pw2, onChange: e => setSf({ ...sf, pw2: e.target.value }) })}
+                {se && <p style={{ color: "#e11d48", fontSize: 13, fontWeight: 600 }}>{se}</p>}
                 <B primary onClick={signup}>가입하기</B>
-                <button onClick={() => setPg("login")} style={{ background: "none", border: "none", color: S.muted, cursor: "pointer" }}>로그인으로 이동</button>
+                <button onClick={() => setPg("login")} style={{ background: "none", border: "none", color: S.muted, cursor: "pointer", fontSize: 13 }}>로그인으로 이동</button>
              </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
