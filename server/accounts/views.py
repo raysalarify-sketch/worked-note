@@ -113,10 +113,9 @@ class PasswordResetRequestView(APIView):
         from django.utils.encoding import force_bytes
 
         try:
-        # 입력값 정규화 (대소문자/공백 처리)
-        email_clean = email.lower().strip() if email else ""
+            # 입력값 정규화 (대소문자/공백 처리)
+            email_clean = email.lower().strip() if email else ""
 
-        try:
             # 1차 검색: 정확한 이메일 매칭 (대소문자 무시)
             user = User.objects.filter(email__iexact=email_clean).first()
             
