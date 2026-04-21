@@ -39,4 +39,4 @@ input:focus,textarea:focus{outline:none}
         }
         @keyframes typing { from { width: 0 } to { width: 100% } }
         @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: ${L.accent}; } }
-      `})]})}(0,jn.createRoot)(document.getElementById(`worked-note-app`)).render((0,I.jsx)(P.StrictMode,{children:(0,I.jsx)(zn,{})}));
+      `})]})}(0,jn.createRoot)(document.getElementById(`root`)).render((0,I.jsx)(P.StrictMode,{children:(0,I.jsx)(zn,{})}));
