@@ -65,9 +65,10 @@ const extractItems = (txt) => {
 
 const Logo = ({size=32, ...p}) => (
   <svg width={size} height={size} viewBox="0 0 40 40" fill="none" {...p}>
-    <rect width="40" height="40" rx="10" fill={S.ink}/>
-    <circle cx="15" cy="20" r="4" stroke="white" strokeWidth="2.5"/>
-    <circle cx="25" cy="20" r="4" stroke="white" strokeWidth="2.5"/>
+    <rect width="40" height="40" rx="12" fill={S.ink}/>
+    <circle cx="15" cy="20" r="5" stroke="white" strokeWidth="3" style={{ opacity: 0.9 }}/>
+    <circle cx="25" cy="20" r="5" stroke="white" strokeWidth="3" style={{ opacity: 0.9 }}/>
+    <path d="M18 16C18 16 19 15 20 15C21 15 22 16 22 16" stroke="white" strokeWidth="2" strokeLinecap="round" style={{ opacity: 0.5 }} />
   </svg>
 );
 
@@ -291,13 +292,15 @@ export default function App() {
         <div style={{ flex: 1.2, background: S.ink, padding: "80px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", borderRight: `1px solid ${S.line}`, color: "#fff" }}>
           <div style={{ position: "absolute", inset: 0, opacity: 0.1, background: "radial-gradient(circle at 2px 2px, #fff 1px, transparent 0)", backgroundSize: "40px 40px" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 640 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
-              <Logo size={46} />
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2 }}>(oo) NOTE</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#0ea5e9", opacity: 0.8, animation: "drop 0.5s ease" }}>for {ROLES[roleIdx]}s</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 40 }}>
+              <Logo size={52} />
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: -2, color: "#fff" }}>oo</span>
+                <span style={{ fontSize: 32, fontWeight: 300, letterSpacing: -1, color: "rgba(255,255,255,0.7)" }}>note</span>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", marginBottom: 6, marginLeft: 2 }} />
               </div>
             </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#0ea5e9", marginBottom: 12, letterSpacing: 2, textTransform: "uppercase" }}>FOR {ROLES[roleIdx]}S</div>
 
             <div style={{ height: 320, position: "relative" }}>
               {demoStep === 0 && (
@@ -372,13 +375,15 @@ export default function App() {
       {/* Sidebar - Mobile Responsive */}
       {(!isMobile || !sel) && (
         <div style={{ width: isMobile ? "100%" : 260, borderRight: `1px solid ${S.line}`, background: "#fff", display: "flex", flexDirection: "column", height: isMobile ? "auto" : "100vh" }}>
-          <div style={{ padding: "24px", display: "flex", alignItems: "center", gap: 12 }}>
-            <Logo size={28} />
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: -1 }}>(oo) NOTE</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9" }}>{ROLES[roleIdx]}</span>
+          <div style={{ padding: "28px 24px", display: "flex", alignItems: "center", gap: 12 }}>
+            <Logo size={32} />
+            <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
+              <span style={{ fontWeight: 800, fontSize: 19, letterSpacing: -1.5 }}>oo</span>
+              <span style={{ fontWeight: 300, fontSize: 19, letterSpacing: -0.5, color: S.muted }}>note</span>
+              <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#0ea5e9", marginBottom: 4 }} />
             </div>
           </div>
+          <div style={{ padding: "0 24px 16px", fontSize: 10, fontWeight: 800, color: "#0ea5e9", letterSpacing: 1, textTransform: "uppercase" }}>{ROLES[roleIdx]} EDITION</div>
           {isMobile && view === "memos" && <div style={{ padding: "0 16px 20px" }}><B primary style={{ width: "100%" }} onClick={newMemo}>+ 새 메모 작성</B></div>}
           
           {!isMobile && (
