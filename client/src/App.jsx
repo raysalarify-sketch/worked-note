@@ -409,19 +409,32 @@ export default function App() {
                     value={ec}
                     onChange={e => { setEc(e.target.value); setTotal(getSum(e.target.value)); }}
                     onFocus={()=>setEditing(true)}
-                        <button style={{ background: "#fff", color: S.ink, border: "none", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 800, marginTop: 12, cursor: "pointer" }}>지금 적용</button>
-                     </div>
+                    style={{ width: "100%", height: "60vh", border: "none", fontSize: isMobile ? 16 : 18, lineHeight: 1.8, resize: "none", outline: "none", fontFamily: S.font, background: "transparent" }}
+                    placeholder="적어보세요..."
+                  />
+                </div>
+              ) : (
+                <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: S.muted }}>
+                   <div style={{ textAlign: "center" }}>
+                     <div style={{ fontSize: 48, marginBottom: 16 }}>📂</div>
+                     <p>메모를 선택하세요.</p>
                    </div>
                 </div>
-              </div>
-            ) : (
-              <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: S.muted }}>
-                 <div style={{ textAlign: "center" }}>
-                   <div style={{ fontSize: 48, marginBottom: 16 }}>📂</div>
-                   <p style={{ fontWeight: 600 }}>메모를 선택하거나 새로 생성하세요.</p>
-                 </div>
+              )}
+            </div>
+
+            {/* AI Insight Sidebar - Desktop Only */}
+            {!isMobile && sel && (
+              <div style={{ width: 280, borderLeft: `1px solid ${S.line}`, background: "#fcfcfc", padding: "32px 24px", animation: "right .5s ease" }}>
+                <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 20 }}>💡 INSIGHT</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div style={{ background: "#fff", padding: 12, borderRadius: 10, boxShadow: S.shadow, border: `1px solid ${S.line}`, fontSize: 12 }}>
+                    관련 태그: #기획 #개발
+                  </div>
+                </div>
               </div>
             )}
+          </div>
 
             {/* Smart Calc Popup */}
             {total > 0 && (
