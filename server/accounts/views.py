@@ -117,6 +117,25 @@ class PasswordResetRequestView(APIView):
             return Response({'message': '처리 중 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class DebugLookupView(APIView):
+    """라이브 서버 DB 직접 조회 (진단용 - 확인 후 즉시 삭제 예정)"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from django.contrib.auth.models import User
+        q = request.GET.get('q', '')
+        u = User.objects.filter(Q(username__icontains=q) | Q(email__icontains=q)).first()
+        if u:
+            return Response({
+                'exists': True,
+                'username_len': len(u.username),
+                'email_len': len(u.email),
+                'username_masked': u.username[:3] + '***',
+                'is_active': u.is_active
+            })
+        return Response({'exists': False})
+
+
 class PasswordResetConfirmView(APIView):
     """비밀번호 재설정 확인"""
     permission_classes = [permissions.AllowAny]
