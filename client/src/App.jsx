@@ -260,11 +260,19 @@ export default function App() {
   const B = ({children,primary,danger,small,style,...p}) => <button {...p} style={{border:"none",borderRadius:8,fontSize:small?12:14,fontWeight:600,cursor:"pointer",fontFamily:S.font,padding:small?"6px 12px":"12px 24px",background:danger?"#e11d48":primary?S.ink:S.cream,color:danger?"#fff":primary?S.paper:S.ink,transition:"all .2s",...style}} onMouseEnter={e=>{if(!p.disabled) e.currentTarget.style.opacity=0.9}} onMouseLeave={e=>{e.currentTarget.style.opacity=1}}>{children}</button>;
 
   // Views Partitioning
+  // Multi-Lens Professional Roles
+  const ROLES = ["Developer", "Designer", "Sales", "HR", "Personal", "Planner"];
+  const [roleIdx, setRoleIdx] = useState(0);
+  useEffect(() => {
+    const it = setInterval(() => setRoleIdx(s => (s + 1) % ROLES.length), 2500);
+    return () => clearInterval(it);
+  }, []);
+
   // Cinematic Showcase Logic
   const [demoStep, setDemoStep] = useState(0);
   useEffect(() => {
     if (pg !== "login") return;
-    const it = setInterval(() => setDemoStep(s => (s + 1) % 3), 4000);
+    const it = setInterval(() => setDemoStep(s => (s + 1) % 4), 5000);
     return () => clearInterval(it);
   }, [pg]);
 
@@ -274,32 +282,42 @@ export default function App() {
         <div style={{ flex: 1.2, background: S.ink, padding: "80px", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", borderRight: `1px solid ${S.line}`, color: "#fff" }}>
           <div style={{ position: "absolute", inset: 0, opacity: 0.1, background: "radial-gradient(circle at 2px 2px, #fff 1px, transparent 0)", backgroundSize: "40px 40px" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: 640 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40, animation: "slideUpFade 0.8s ease" }}>
-              <Logo size={40} />
-              <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: 3 }}>(oo) NOTE</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
+              <Logo size={46} />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2 }}>(oo) NOTE</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#0ea5e9", opacity: 0.8, animation: "drop 0.5s ease" }}>for {ROLES[roleIdx]}s</span>
+              </div>
             </div>
+
             <div style={{ height: 320, position: "relative" }}>
               {demoStep === 0 && (
                 <div style={{ animation: "slideUpFade 0.8s ease" }}>
-                  <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>기록이<br />돈이 됩니다.</h1>
-                  <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>숫자만 적으면 (oo)이 즉시 계산하고<br />전문적인 인보이스로 변환합니다.</p>
+                  <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>전문가들의<br />새로운 시각.</h1>
+                  <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>기획부터 개발, 영업까지.<br />(oo)은 당신의 전문 분야를 완벽하게 이해합니다.</p>
                 </div>
               )}
               {demoStep === 1 && (
                 <div style={{ animation: "slideUpFade 0.8s ease" }}>
-                  <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>지능형<br />연결의 힘.</h1>
-                  <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>당신의 생각을 과거의 기록과<br />연결하여 더 큰 인사이트를 제공합니다.</p>
+                  <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>개발과 디자인이<br />만나는 곳.</h1>
+                  <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>코드를 리뷰하고 시안을 정리하세요.<br />모든 창의적 활동이 (oo) 안에서 이뤄집니다.</p>
                 </div>
               )}
               {demoStep === 2 && (
                 <div style={{ animation: "slideUpFade 0.8s ease" }}>
-                  <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>메모가 곧<br />작품이다.</h1>
-                  <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>젠(Zen) 모드로 몰입하고,<br />단 한 번의 터치로 PT를 시작하세요.</p>
+                  <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>영업을 넘어<br />비즈니스로.</h1>
+                  <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>정산과 계약, 발송까지 원스톱으로.<br />영업 고수들이 (oo)을 선택하는 이유입니다.</p>
+                </div>
+              )}
+              {demoStep === 3 && (
+                <div style={{ animation: "slideUpFade 0.8s ease" }}>
+                  <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, letterSpacing: -3 }}>지극히 개인적인<br />명작의 기록.</h1>
+                  <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.6 }}>일기부터 가계부까지.<br />가장 강력하고 아름다운 개인 공간이 됩니다.</p>
                 </div>
               )}
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 60 }}>
-              {[0, 1, 2].map(i => (
+              {[0, 1, 2, 3].map(i => (
                 <div key={i} style={{ width: demoStep === i ? 40 : 8, height: 8, borderRadius: 4, background: demoStep === i ? "#fff" : "rgba(255,255,255,0.2)", transition: "all 0.4s ease" }} />
               ))}
             </div>
@@ -347,7 +365,10 @@ export default function App() {
         <div style={{ width: isMobile ? "100%" : 260, borderRight: `1px solid ${S.line}`, background: "#fff", display: "flex", flexDirection: "column", height: isMobile ? "auto" : "100vh" }}>
           <div style={{ padding: "24px", display: "flex", alignItems: "center", gap: 12 }}>
             <Logo size={28} />
-            <span style={{ fontWeight: 800, fontSize: 18, letterSpacing: -1 }}>(oo) Note</span>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: -1 }}>(oo) NOTE</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9" }}>{ROLES[roleIdx]}</span>
+            </div>
           </div>
           {isMobile && view === "memos" && <div style={{ padding: "0 16px 20px" }}><B primary style={{ width: "100%" }} onClick={newMemo}>+ 새 메모 작성</B></div>}
           
