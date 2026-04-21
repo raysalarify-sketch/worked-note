@@ -94,6 +94,7 @@ export default function App() {
   const [eTag, setETag] = useState(1);
   const [ePin, setEPin] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [editing, setEditing] = useState(false);
   useEffect(() => {
     const handle = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handle);
