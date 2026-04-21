@@ -220,7 +220,10 @@ export default function App() {
     try {
       await api.auth.forgotRequest(ff.email.toLowerCase().trim());
       flash("이메일로 재설정 링크를 보냈습니다."); setPg("login");
-    } catch (e) { flash("가입되지 않은 이메일입니다.", "err"); }
+    } catch (e) { 
+      const msg = e.response?.data?.message || "비밀번호 초기화 요청 중 오류가 발생했습니다.";
+      flash(msg, "err"); 
+    }
     finally { setSending(false); }
   };
 
