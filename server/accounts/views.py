@@ -104,26 +104,26 @@ class PasswordResetRequestView(APIView):
                 user = User.objects.filter(Q(email__icontains=email_clean) | Q(username__icontains=email_clean)).first()
 
             if not user:
-                return Response({'message': f'계정({email_clean})을 찾을 수 없습니다. 다시 시도해 주세요.'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'message': '가입된 기록을 찾을 수 없습니다. 이메일 주소를 다시 확인해 주세요.'}, status=status.HTTP_404_NOT_FOUND)
             
-            try:
-                token = default_token_generator.make_token(user)
-                uid = urlsafe_base64_encode(force_bytes(user.pk))
-            except Exception as e:
-                return Response({'message': f'토큰 생성 실패: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
             
+            # 이메일 발송 로직
+            from django.core.mail import send_mail
+            from django.conf import settings
+            
+            reset_url = f"https://worked-note.onrender.com/reset-password/{uid}/{token}"
+            subject = "[Smart Note] 비밀번호 재설정 안내"
+            message = f"안녕하세요, Smart Note입니다.\n\n아래 링크를 클릭하여 비밀번호를 재설정해 주세요.\n\n{reset_url}\n\n감사합니다."
+            
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+
             return Response({
-                'message': '인증 메일 형식이 생성되었습니다. (데모 사이트의 경우 화면에 표시됩니다)',
-                'uid': uid,
-                'token': token
+                'message': '가입하신 이메일로 비밀번호 재설정 링크를 발송했습니다. 메일을 확인해 주세요.'
             })
         except Exception as e:
-            import traceback
-            error_trace = traceback.format_exc()
-            return Response({
-                'message': f'서버 내부 로직 오류: {str(e)}',
-                'debug': error_trace[:200]
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': f'처리 중 오류가 발생했습니다: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DebugLookupView(APIView):

@@ -74,7 +74,6 @@ export default function App() {
   const [lf, setLf] = useState({ email: "", pw: "" });
   const [sf, setSf] = useState({ name: "", email: "", password: "", password_confirm: "" });
   const [ff, setFf] = useState({ email: "" });
-  const [forgotLink, setForgotLink] = useState(null);
   const [rf, setRf] = useState({ uid: "", token: "", pw: "", pw_confirm: "" });
 
   const [coms, setComs] = useState([]);
@@ -225,19 +224,11 @@ export default function App() {
     setSending(true);
     try {
       const res = await api.auth.forgotRequest(ff.email.toLowerCase().trim());
-      // 데모 환경을 위해 응답에 포함된 uid/token으로 직접 링크 생성
-      if (res.uid && res.token) {
-        const resetUrl = `${window.location.origin}/reset-password/${res.uid}/${res.token}`;
-        setForgotLink(resetUrl);
-        flash("재설정 링크가 생성되었습니다. 아래 링크를 클릭하세요!");
-      } else {
-        flash("이메일로 재설정 링크를 보냈습니다."); setPg("login");
-      }
+      flash(res.message || "이메일로 재설정 링크를 보냈습니다.");
+      setPg("login");
     } catch (e) { 
-      // RAW 에러 노출로 원인 파악
       const serverMsg = e.response?.data?.message;
-      const errorDetail = e.response?.statusText || e.message;
-      flash(`오류: ${serverMsg || errorDetail}`, "err"); 
+      flash(serverMsg || "가입 중 오류가 발생했습니다.", "err"); 
     }
     finally { setSending(false); }
   };
@@ -316,7 +307,6 @@ export default function App() {
             <span style={{ background: "linear-gradient(to right, #111827, #4b5563)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Note</span>
           </h1>
           <p className="typewriter" style={{ color: S.muted, fontSize: 18, fontWeight: 600, marginTop: 16 }}>당신의 모든 일상을 담는 스마트 비서</p>
-          <div style={{ position: "absolute", bottom: -80, right: 0, fontSize: 10, color: S.muted, opacity: 0.5, fontWeight: 800 }}>v3.2.0 (Direct Link Mode)</div>
         </div>
         
         <div className="card" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 32, padding: 32 }}>
@@ -352,17 +342,9 @@ export default function App() {
 
           {pg === "forgot" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-              <p style={{ textAlign: "center", fontSize: 14, color: S.muted, lineHeight: 1.6 }}>등록하신 이메일을 입력해 주세요.<br/>재설정 링크를 즉시 생성해 드립니다.</p>
+              <p style={{ textAlign: "center", fontSize: 14, color: S.muted, lineHeight: 1.6 }}>등록하신 이메일을 입력해 주세요.<br/>재설정 링크를 보내드립니다.</p>
               {I({ type: "email", value: ff.email, onChange: e => setFf({ ...ff, email: e.target.value }), placeholder: "이메일 주소" })}
-              <B primary onClick={forgot} disabled={sending}>링크 생성하기</B>
-              
-              {forgotLink && (
-                <div style={{ marginTop: 20, padding: 16, background: "rgba(79,70,229,0.1)", borderRadius: 16, border: `1px solid ${S.accent}30`, textAlign: "center", animation: "up .3s ease" }}>
-                  <p style={{ fontSize: 13, fontWeight: 800, color: S.accent, marginBottom: 8 }}>✨ 재설정 링크가 준비되었습니다!</p>
-                  <a href={forgotLink} style={{ fontSize: 13, color: S.accent, fontWeight: 900, textDecoration: "underline", wordBreak: "break-all" }}>여기를 클릭하여 비밀번호 변경하기</a>
-                </div>
-              )}
-              
+              <B primary onClick={forgot} disabled={sending}>메일 요청하기</B>
               <button onClick={() => setPg("login")} style={{ background: "none", border: "none", color: S.muted, fontSize: 13, cursor: "pointer", fontWeight: 700 }}>로그인으로 돌아가기</button>
             </div>
           )}
