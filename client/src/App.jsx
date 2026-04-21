@@ -74,6 +74,8 @@ export default function App() {
   const [lf, setLf] = useState({ email: "", pw: "" });
   const [sf, setSf] = useState({ name: "", email: "", password: "", password_confirm: "" });
   const [ff, setFf] = useState({ email: "" });
+  const [forgotLink, setForgotLink] = useState(null);
+  const [rf, setRf] = useState({ uid: "", token: "", pw: "", pw_confirm: "" });
 
   const [coms, setComs] = useState([]);
   const [nc, setNc] = useState("");
@@ -87,11 +89,15 @@ export default function App() {
     const handleResize = () => setIsMob(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     
-    // URL 기반 공유 페이지 감지
+    // URL 기반 공유 및 비밀번호 재설정 감지
     const path = window.location.pathname;
     if (path.startsWith("/shared/")) {
       const slug = path.split("/")[2];
       loadSharedMemo(slug);
+    } else if (path.startsWith("/reset-password/")) {
+      const parts = path.split("/");
+      setRf({ ...rf, uid: parts[2], token: parts[3] });
+      setPg("reset_confirm");
     }
     
     if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
@@ -218,12 +224,30 @@ export default function App() {
   const forgot = async () => {
     setSending(true);
     try {
-      await api.auth.forgotRequest(ff.email.toLowerCase().trim());
-      flash("이메일로 재설정 링크를 보냈습니다."); setPg("login");
+      const res = await api.auth.forgotRequest(ff.email.toLowerCase().trim());
+      // 데모 환경을 위해 응답에 포함된 uid/token으로 직접 링크 생성
+      if (res.uid && res.token) {
+        const resetUrl = `${window.location.origin}/reset-password/${res.uid}/${res.token}`;
+        setForgotLink(resetUrl);
+        flash("재설정 링크가 생성되었습니다. 아래 링크를 클릭하세요!");
+      } else {
+        flash("이메일로 재설정 링크를 보냈습니다."); setPg("login");
+      }
     } catch (e) { 
       const msg = e.response?.data?.message || "비밀번호 초기화 요청 중 오류가 발생했습니다.";
       flash(msg, "err"); 
     }
+    finally { setSending(false); }
+  };
+
+  const resetPassword = async () => {
+    if (rf.pw !== rf.pw_confirm) return flash("비밀번호가 일치하지 않습니다.", "err");
+    setSending(true);
+    try {
+      await api.auth.confirmPasswordReset({ uid: rf.uid, token: rf.token, new_password: rf.pw });
+      flash("비밀번호가 성공적으로 변경되었습니다! 로그인해 주세요.");
+      setPg("login"); setForgotLink(null);
+    } catch (e) { flash("유효하지 않거나 만료된 링크입니다.", "err"); }
     finally { setSending(false); }
   };
 
@@ -325,10 +349,28 @@ export default function App() {
 
           {pg === "forgot" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-              <p style={{ textAlign: "center", fontSize: 14, color: S.muted, lineHeight: 1.6 }}>등록하신 이메일을 입력해 주세요.<br/>재설정 링크를 보내드립니다.</p>
+              <p style={{ textAlign: "center", fontSize: 14, color: S.muted, lineHeight: 1.6 }}>등록하신 이메일을 입력해 주세요.<br/>재설정 링크를 즉시 생성해 드립니다.</p>
               {I({ type: "email", value: ff.email, onChange: e => setFf({ ...ff, email: e.target.value }), placeholder: "이메일 주소" })}
-              <B primary onClick={forgot} disabled={sending}>메일 요청하기</B>
+              <B primary onClick={forgot} disabled={sending}>링크 생성하기</B>
+              
+              {forgotLink && (
+                <div style={{ marginTop: 20, padding: 16, background: "rgba(79,70,229,0.1)", borderRadius: 16, border: `1px solid ${S.accent}30`, textAlign: "center", animation: "up .3s ease" }}>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: S.accent, marginBottom: 8 }}>✨ 재설정 링크가 준비되었습니다!</p>
+                  <a href={forgotLink} style={{ fontSize: 13, color: S.accent, fontWeight: 900, textDecoration: "underline", wordBreak: "break-all" }}>여기를 클릭하여 비밀번호 변경하기</a>
+                </div>
+              )}
+              
               <button onClick={() => setPg("login")} style={{ background: "none", border: "none", color: S.muted, fontSize: 13, cursor: "pointer", fontWeight: 700 }}>로그인으로 돌아가기</button>
+            </div>
+          )}
+
+          {pg === "reset_confirm" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              <h2 style={{ textAlign: "center", fontSize: 20, fontWeight: 900 }}>비밀번호 재설정</h2>
+              <p style={{ textAlign: "center", fontSize: 14, color: S.muted }}>새로운 비밀번호를 입력해 주세요.</p>
+              {I({ type: "password", value: rf.pw, onChange: e => setRf({ ...rf, pw: e.target.value }), placeholder: "새 비밀번호" })}
+              {I({ type: "password", value: rf.pw_confirm, onChange: e => setRf({ ...rf, pw_confirm: e.target.value }), placeholder: "새 비밀번호 확인" })}
+              <B primary onClick={resetPassword} disabled={sending}>{sending ? "변경 중..." : "비밀번호 확정 및 로그인"}</B>
             </div>
           )}
         </div>
