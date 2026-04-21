@@ -72,7 +72,6 @@ if DATABASE_URL:
             conn_health_checks=True,
         )
     }
-    print("DATABASE INFO: Using EXTERNAL database (PostgreSQL)")
 else:
     DATABASES = {
         'default': {
@@ -80,7 +79,6 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-    print("DATABASE INFO: Using INTERNAL database (SQLite) - DATA WILL BE LOST ON DEPLOY")
 
 AUTH_PASSWORD_VALIDATORS = [
     {
