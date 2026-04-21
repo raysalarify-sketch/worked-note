@@ -104,37 +104,41 @@ class PasswordResetRequestView(APIView):
                 user = User.objects.filter(Q(email__icontains=email_clean) | Q(username__icontains=email_clean)).first()
 
             if not user:
-                return Response({'message': '가입된 기록을 찾을 수 없습니다. 이메일 주소를 다시 확인해 주세요.'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'message': f'계정({email_clean})을 찾을 수 없습니다. 다시 시도해 주세요.'}, status=status.HTTP_404_NOT_FOUND)
             
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            try:
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+            except Exception as e:
+                return Response({'message': f'토큰 생성 실패: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
             return Response({
-                'message': '인증 메일 형식이 생성되었습니다.',
+                'message': '인증 메일 형식이 생성되었습니다. (데모 사이트의 경우 화면에 표시됩니다)',
                 'uid': uid,
                 'token': token
             })
-        except Exception:
-            return Response({'message': '처리 중 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'message': f'처리 중 오류: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DebugLookupView(APIView):
-    """라이브 서버 DB 직접 조회 (진단용 - 확인 후 즉시 삭제 예정)"""
+    """라이브 서버 DB 직접 조회 (진단용 - 최종 버전)"""
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
         from django.contrib.auth.models import User
+        from django.db.models import Q
         q = request.GET.get('q', '')
         u = User.objects.filter(Q(username__icontains=q) | Q(email__icontains=q)).first()
         if u:
             return Response({
                 'exists': True,
-                'username_len': len(u.username),
-                'email_len': len(u.email),
-                'username_masked': u.username[:3] + '***',
-                'is_active': u.is_active
+                'username': u.username,
+                'email': u.email,
+                'is_active': u.is_active,
+                'id': u.id
             })
-        return Response({'exists': False})
+        return Response({'exists': False, 'total_count': User.objects.count()})
 
 
 class PasswordResetConfirmView(APIView):
