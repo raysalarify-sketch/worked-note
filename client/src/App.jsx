@@ -182,6 +182,13 @@ export default function App() {
       flash("가입 완료!"); setPg("login"); setLf({email:sf.email,pw:""});
     } catch(e){ 
       const errorData = e.response?.data;
+      console.error("Signup Error Raw:", errorData);
+      
+      // 사용자에게 서버의 진짜 목소리를 보여줍니다 (디버깅용)
+      if (errorData) {
+        alert("원인: " + JSON.stringify(errorData));
+      }
+      
       let msg = "가입 중 오류가 발생했습니다.";
       if (errorData) {
         if (typeof errorData === 'string') msg = errorData;
