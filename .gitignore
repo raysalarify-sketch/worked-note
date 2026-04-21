@@ -7,3 +7,4 @@ server/venv/
 server/db.sqlite3
 .env
 _github_upload/
+server/staticfiles/
