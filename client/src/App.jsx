@@ -316,6 +316,7 @@ export default function App() {
             <span style={{ background: "linear-gradient(to right, #111827, #4b5563)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Note</span>
           </h1>
           <p className="typewriter" style={{ color: S.muted, fontSize: 18, fontWeight: 600, marginTop: 16 }}>당신의 모든 일상을 담는 스마트 비서</p>
+          <div style={{ position: "absolute", bottom: -80, right: 0, fontSize: 10, color: S.muted, opacity: 0.5, fontWeight: 800 }}>v3.2.0 (Direct Link Mode)</div>
         </div>
         
         <div className="card" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 32, padding: 32 }}>
