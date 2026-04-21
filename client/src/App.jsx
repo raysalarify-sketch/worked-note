@@ -61,8 +61,8 @@ const extractItems = (txt) => {
   return items;
 };
 
-const Logo = ({size=32}) => (
-  <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+const Logo = ({size=32, ...p}) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" {...p}>
     <rect width="40" height="40" rx="10" fill={S.ink}/>
     <circle cx="15" cy="20" r="4" stroke="white" strokeWidth="2.5"/>
     <circle cx="25" cy="20" r="4" stroke="white" strokeWidth="2.5"/>
